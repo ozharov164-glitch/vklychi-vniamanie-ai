@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { apiSteps, apiStuck } from '../api'
 import { useAppStore } from '../store'
+import { images } from '../lib/assets'
+import { ScreenHero } from '../components/ScreenHero'
+
+const FEAR_LABELS = ['', 'легко', 'терпимо', 'напряжно', 'страшно', 'парализует']
 
 export function StepsScreen() {
   const premium = useAppStore((s) => s.premium)
@@ -43,59 +47,81 @@ export function StepsScreen() {
   }
 
   return (
-    <motion.div className="space-y-4 pb-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <h2 className="text-xl font-bold">Магия шагов</h2>
-      <p className="text-sm text-[var(--muted)]">
-        Одна фраза → маленькие шаги. Premium — глубже (DeepSeek).
-      </p>
+    <motion.div className="screen stack" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <ScreenHero
+        image={images.steps}
+        alt=""
+        eyebrow="Шаг 2"
+        title="Магия шагов"
+        subtitle="Одна задача → маленькие действия. Чем страшнее — тем мельче шаги."
+        compact
+      />
+
+      <label className="field-label" htmlFor="task-input">
+        Что нужно сделать?
+      </label>
       <input
+        id="task-input"
         className="input-field"
         placeholder="Например: написать отчёт"
         value={task}
         onChange={(e) => setTask(e.target.value)}
       />
-      <div>
-        <p className="mb-2 text-xs text-[var(--muted)]">Насколько страшно? {fear}/5</p>
+
+      <div className="fear-block">
+        <div className="fear-block__head">
+          <p className="field-label">Насколько страшно?</p>
+          <span className="fear-block__value">{fear}/5 · {FEAR_LABELS[fear]}</span>
+        </div>
         <input
           type="range"
           min={1}
           max={5}
           value={fear}
           onChange={(e) => setFear(Number(e.target.value))}
-          className="w-full accent-[var(--accent)]"
+          className="fear-slider"
+          aria-label="Уровень страха"
         />
       </div>
-      {error && <p className="text-sm text-red-400">{error}</p>}
+
+      {error && <p className="form-error">{error}</p>}
+
       <button type="button" className="btn-primary" disabled={loading || task.length < 2} onClick={split}>
         {loading ? 'Думаю…' : 'Разбить на шаги'}
       </button>
-      <button type="button" className="btn-ghost w-full" disabled={stuckLoading} onClick={onStuck}>
-        {stuckLoading ? '…' : 'Застрял(а)'}
+      <button type="button" className="btn-secondary" disabled={stuckLoading} onClick={onStuck}>
+        {stuckLoading ? 'Секунду…' : 'Застрял(а) — нужен микро-шаг'}
       </button>
+
       {stuck && (
-        <div className="card space-y-2 p-4">
-          <p className="text-sm">{stuck.reflection}</p>
-          <p className="font-medium text-[var(--accent)]">{stuck.micro_step}</p>
-          <button type="button" className="btn-primary" onClick={() => setTab('focus')}>
-            2 минуты «рядом»
+        <div className="highlight-card">
+          <p className="highlight-card__text">{stuck.reflection}</p>
+          <p className="highlight-card__accent">{stuck.micro_step}</p>
+          <button type="button" className="btn-primary btn-primary--compact" onClick={() => setTab('focus')}>
+            2 минуты «Рядом»
           </button>
         </div>
       )}
+
       {steps.length > 0 && (
-        <motion.ol className="card list-decimal space-y-2 p-4 pl-8 text-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <ol className="steps-list">
           {steps.map((s, i) => (
-            <li key={i}>{s}</li>
+            <li key={i}>
+              <span className="steps-list__n">{i + 1}</span>
+              <span>{s}</span>
+            </li>
           ))}
-        </motion.ol>
+        </ol>
       )}
+
       {micro && (
-        <motion.div className="card p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <p className="text-xs text-[var(--accent)]">Первый микро-шаг</p>
-          <p className="mt-1">{micro}</p>
+        <div className="highlight-card">
+          <p className="highlight-card__label">Первый микро-шаг</p>
+          <p className="highlight-card__text">{micro}</p>
           {!premium && (
-            <p className="mt-2 text-xs text-[var(--muted)]">В Премиум — больше шагов и точнее формулировки.</p>
+            <p className="hint-line">В Премиум — больше шагов и точнее формулировки (ИИ сильнее).</p>
           )}
-        </motion.div>
+        </div>
       )}
     </motion.div>
   )

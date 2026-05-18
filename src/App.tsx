@@ -5,6 +5,7 @@ import { HomeScreen } from './screens/HomeScreen'
 import { DumpScreen } from './screens/DumpScreen'
 import { StepsScreen } from './screens/StepsScreen'
 import { TodayScreen } from './screens/TodayScreen'
+import { images } from './lib/assets'
 
 export function App() {
   const ready = useAppStore((s) => s.ready)
@@ -12,14 +13,15 @@ export function App() {
 
   if (!ready) {
     return (
-      <div className="flex min-h-dvh items-center justify-center p-6 text-center">
-        <p className="text-[var(--muted)]">Подключаемся…</p>
+      <div className="app-loading">
+        <img src={images.hero} alt="" className="app-loading__img" />
+        <p className="app-loading__text">Подключаем ВключиВнимание…</p>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg px-4 pb-28 pt-6">
+    <div className="app-shell">
       {tab === 'home' && <HomeScreen />}
       {tab === 'dump' && <DumpScreen />}
       {tab === 'steps' && <StepsScreen />}

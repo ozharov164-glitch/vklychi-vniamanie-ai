@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { apiSessionFinish, apiSessionStart } from '../api'
 import { useAppStore } from '../store'
+import { images } from '../lib/assets'
+import { ScreenHero } from '../components/ScreenHero'
 
 const DURATIONS = [15, 25, 45] as const
 
 export function FocusTimer() {
-  const premium = useAppStore((s) => s.premium)
   const setStats = useAppStore((s) => s.setStats)
   const [duration, setDuration] = useState<(typeof DURATIONS)[number]>(15)
   const [note, setNote] = useState('')
@@ -48,61 +49,63 @@ export function FocusTimer() {
   }
 
   return (
-    <motion.div className="space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <p className="text-sm text-[var(--muted)]">
-        Режим «рядом»: таймер и мягкое присутствие. {!premium && 'ИИ не нужен — без лимитов.'}
-      </p>
+    <motion.div className="screen stack focus-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <ScreenHero
+        image={images.focus}
+        alt=""
+        eyebrow="Шаг 3"
+        title="Рядом"
+        subtitle="Таймер и мягкое присутствие. ИИ не нужен — без лимитов."
+        compact
+      />
 
       {!running && (
         <>
-          <div className="flex gap-2">
+          <p className="field-label">Сколько побыть рядом?</p>
+          <div className="duration-pills">
             {DURATIONS.map((d) => (
               <button
                 key={d}
                 type="button"
-                className={`flex-1 rounded-xl py-3 text-sm font-semibold ${
-                  duration === d
-                    ? 'bg-[var(--accent)] text-[#1a1208]'
-                    : 'bg-[var(--bg-elevated)] text-[var(--muted)]'
-                }`}
+                className={`duration-pill ${duration === d ? 'duration-pill--active' : ''}`}
                 onClick={() => setDuration(d)}
               >
                 {d} мин
               </button>
             ))}
           </div>
+          <label className="field-label" htmlFor="focus-note">
+            Что делаешь? (необязательно)
+          </label>
           <input
+            id="focus-note"
             className="input-field"
-            placeholder="Что делаешь? (необязательно)"
+            placeholder="Например: 5 минут на письмо"
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
-          <button type="button" className="btn-primary" onClick={start}>
+          <button type="button" className="btn-primary btn-primary--glow" onClick={start}>
             Начать рядом
           </button>
         </>
       )}
 
       {running && (
-        <motion.div
-          className="card flex flex-col items-center py-10"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <motion.div className="pulse-ring mb-6 flex h-32 w-32 items-center justify-center rounded-full border-2 border-[var(--accent)]">
-            <span className="font-mono text-4xl font-bold text-[var(--accent)]">
+        <motion.div className="timer-card" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
+          <div className="timer-ring">
+            <span className="timer-ring__time">
               {mm}:{ss}
             </span>
-          </motion.div>
-          <p className="mb-6 text-center text-sm text-[var(--muted)]">Я рядом. Ты в своём темпе.</p>
-          <div className="grid w-full gap-2 px-4">
+          </div>
+          <p className="timer-card__hint">Я рядом. Ты в своём темпе — без оценки.</p>
+          <div className="timer-outcomes">
             <button type="button" className="btn-primary" onClick={() => finish('done')}>
               Сделал(а)
             </button>
-            <button type="button" className="btn-ghost" onClick={() => finish('partial')}>
+            <button type="button" className="btn-secondary" onClick={() => finish('partial')}>
               Частично — и это ок
             </button>
-            <button type="button" className="btn-ghost" onClick={() => finish('enough')}>
+            <button type="button" className="btn-secondary" onClick={() => finish('enough')}>
               Достаточно на сегодня
             </button>
           </div>
