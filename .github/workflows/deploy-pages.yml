@@ -1,3 +1,4 @@
+# Деплой на GitHub Pages. Settings → Pages → Source: GitHub Actions.
 name: Deploy to GitHub Pages
 
 on:
@@ -17,18 +18,33 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-      - run: npm ci
-      - run: npm run build
+
+      - name: Install
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
         env:
           VITE_BASE_PATH: /vklychi-vniamanie-ai/
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
+        run: npm run build
+
+      - name: SPA fallback for GitHub Pages
+        run: cp dist/index.html dist/404.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
@@ -38,6 +54,12 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    permissions:
+      pages: write
+      id-token: write
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
