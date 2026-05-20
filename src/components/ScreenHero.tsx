@@ -23,7 +23,7 @@ export function ScreenHero({ image, alt, eyebrow, title, subtitle, compact }: Pr
         animate={{ scale: 1 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
-        <img src={image} alt="" className="screen-hero__img" aria-hidden />
+        <img src={image} alt="" className="screen-hero__img" decoding="sync" aria-hidden />
         <div className="screen-hero__glow" />
       </motion.div>
       <div className="screen-hero__copy">

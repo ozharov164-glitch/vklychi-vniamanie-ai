@@ -1,11 +1,12 @@
 import { useAppStore, type TabId } from '../store'
+import { TabIcon } from './TabIcons'
 
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'home', label: 'Главная', icon: '⌂' },
-  { id: 'dump', label: 'Сброс', icon: '◎' },
-  { id: 'steps', label: 'Шаги', icon: '▸' },
-  { id: 'focus', label: 'Рядом', icon: '◉' },
-  { id: 'today', label: 'День', icon: '☰' },
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'home', label: 'Главная' },
+  { id: 'dump', label: 'Сброс' },
+  { id: 'steps', label: 'Шаги' },
+  { id: 'focus', label: 'Рядом' },
+  { id: 'today', label: 'День' },
 ]
 
 export function TabBar() {
@@ -13,20 +14,25 @@ export function TabBar() {
   const setTab = useAppStore((s) => s.setTab)
   return (
     <nav className="tab-bar" aria-label="Навигация">
-      {TABS.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          className={`tab-btn ${tab === t.id ? 'active' : ''}`}
-          onClick={() => setTab(t.id)}
-          aria-current={tab === t.id ? 'page' : undefined}
-        >
-          <span className="tab-btn__icon" aria-hidden>
-            {t.icon}
-          </span>
-          <span>{t.label}</span>
-        </button>
-      ))}
+      {TABS.map((t) => {
+        const active = tab === t.id
+        return (
+          <button
+            key={t.id}
+            type="button"
+            className={`tab-btn ${active ? 'active' : ''}`}
+            onClick={() => setTab(t.id)}
+            aria-current={active ? 'page' : undefined}
+          >
+            <span className="tab-btn__pill">
+              <span className="tab-btn__icon">
+                <TabIcon id={t.id} active={active} />
+              </span>
+              <span className="tab-btn__label">{t.label}</span>
+            </span>
+          </button>
+        )
+      })}
     </nav>
   )
 }

@@ -12,6 +12,7 @@ type AppState = {
   tab: TabId
   setTab: (t: TabId) => void
   applyInit: (d: InitResponse) => void
+  setBootComplete: () => void
   setStats: (s: { sessionsToday: number; winsTotal: number }) => void
 }
 
@@ -25,11 +26,11 @@ export const useAppStore = create<AppState>((set) => ({
   setTab: (tab) => set({ tab }),
   applyInit: (d) =>
     set({
-      ready: true,
       premium: d.isPremium,
       aiUsage: d.aiUsage,
       limits: d.limits,
       stats: d.stats,
     }),
+  setBootComplete: () => set({ ready: true }),
   setStats: (stats) => set({ stats }),
 }))
