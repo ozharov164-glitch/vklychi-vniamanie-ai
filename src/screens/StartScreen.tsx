@@ -6,6 +6,7 @@ import { AiStatusLine } from '../components/AiStatusLine'
 import { PremiumBanner } from '../components/PremiumBanner'
 import { VoiceTextField } from '../components/VoiceTextField'
 import { UnfreezeTimer } from '../components/UnfreezeTimer'
+import { ModeIcon } from '../components/TabIcons'
 import { images } from '../lib/assets'
 
 type Step = 'pick' | 'input' | 'timer'
@@ -113,29 +114,25 @@ export function StartScreen() {
           <div className="mode-grid">
             <button
               type="button"
-              className="mode-card"
+              className="mode-card mode-card--stuck"
               onClick={() => {
                 setMode('stuck')
                 setStep('input')
               }}
             >
-              <span className="mode-card__emoji" aria-hidden>
-                🧊
-              </span>
+              <ModeIcon mode="stuck" />
               <span className="mode-card__title">Застрял(а)</span>
               <span className="mode-card__desc">Знаю задачу, но не могу начать</span>
             </button>
             <button
               type="button"
-              className="mode-card"
+              className="mode-card mode-card--noise"
               onClick={() => {
                 setMode('noise')
                 setStep('input')
               }}
             >
-              <span className="mode-card__emoji" aria-hidden>
-                🌫
-              </span>
+              <ModeIcon mode="noise" />
               <span className="mode-card__title">Шум в голове</span>
               <span className="mode-card__desc">Много мыслей, не знаю с чего</span>
             </button>
@@ -148,8 +145,13 @@ export function StartScreen() {
           <button type="button" className="link-back" onClick={() => setStep('pick')}>
             ← Назад
           </button>
-          <p className="section-label">{MODE_COPY[mode].title}</p>
-          <p className="hint-line">{MODE_COPY[mode].hint}</p>
+          <div className="mode-input-head">
+            <ModeIcon mode={mode} />
+            <div>
+              <p className="section-label section-label--inline">{MODE_COPY[mode].title}</p>
+              <p className="hint-line hint-line--tight">{MODE_COPY[mode].hint}</p>
+            </div>
+          </div>
           <VoiceTextField
             id="unfreeze-text"
             multiline
