@@ -78,11 +78,32 @@ export type FocusHistoryItem = {
   mode: string
   taskLabel: string
   microStep: string
+  inputPreview?: string
+  reflectionPreview?: string
   outcome: string | null
   durationSec: number
   helpWorked?: string
   startedAt: string
   endedAt: string | null
+}
+
+export type FocusSessionDetail = {
+  id: number
+  mode: string
+  inputText: string
+  microStep: string
+  taskLabel: string
+  reflection: string
+  outcome: string | null
+  helpWorked?: string
+  startedAt: string | null
+  endedAt: string | null
+  userPriority?: string
+  userQuote?: string
+  mechanism?: string
+  emotionalTone?: string
+  contextLoad?: string
+  blocker?: string
 }
 
 export type FocusMemoryItem = {
@@ -223,11 +244,17 @@ export async function apiOutcome(
   })
 }
 
-export async function apiHistory(limit = 20) {
+export async function apiHistory(limit = 30) {
   return post<{ ok: boolean; items: FocusHistoryItem[]; stats: InitResponse['stats'] }>(
     '/mini-app/focus/history',
     { limit },
   )
+}
+
+export async function apiSessionDetail(sessionId: number) {
+  return post<{ ok: boolean; session: FocusSessionDetail }>('/mini-app/focus/session-detail', {
+    sessionId,
+  })
 }
 
 export async function apiTranscribe(audioBase64: string, mimeType: string) {

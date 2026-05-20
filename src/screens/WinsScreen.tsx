@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { apiHistory } from '../api'
+import { WinDetailSheet } from '../components/WinDetailSheet'
 import { COPY } from '../lib/copy'
 import { useAppStore } from '../store'
 
@@ -21,6 +22,7 @@ export function WinsScreen() {
   const setStats = useAppStore((s) => s.setStats)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [detailId, setDetailId] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -28,7 +30,7 @@ export function WinsScreen() {
       setLoading(true)
       setError('')
       try {
-        const res = await apiHistory(20)
+        const res = await apiHistory(30)
         if (!cancelled) {
           setHistory(res.items)
           setStats(res.stats)
@@ -44,10 +46,6 @@ export function WinsScreen() {
       cancelled = true
     }
   }, [setHistory, setStats])
-
-  const completed = history.filter(
-    (h) => h.outcome && ['done', 'partial', 'enough'].includes(h.outcome),
-  )
 
   return (
     <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -75,35 +73,66 @@ export function WinsScreen() {
       {loading && <p className="hint-line">{COPY.wins.loading}</p>}
       {error && <p className="field-error">{error}</p>}
 
-      {!loading && completed.length === 0 && (
+      {!loading && history.length === 0 && (
         <div className="empty-wins">
           <p>{COPY.wins.empty1}</p>
           <p className="hint-line">{COPY.wins.empty2}</p>
         </div>
       )}
 
+      {history.length > 0 && (
+        <>
+          <p className="wins-section-title">{COPY.wins.requestsTitle}</p>
+          <p className="hint-line wins-section-hint">{COPY.wins.requestsHint}</p>
+        </>
+      )}
+
       <ul className="wins-list">
-        {completed.map((item) => (
-          <li key={item.id} className="wins-item">
-            <div className="wins-item__top">
-              <span className="wins-item__mode">{COPY.modeShort[item.mode as keyof typeof COPY.modeShort] || item.mode}</span>
-              <span className={`wins-item__outcome wins-item__outcome--${item.outcome || 'none'}`}>
-                {COPY.outcomes[item.outcome as keyof typeof COPY.outcomes] || COPY.outcomes.progress}
-              </span>
-            </div>
-            <p className="wins-item__task">{item.taskLabel || item.microStep}</p>
-            {item.microStep && item.taskLabel !== item.microStep && (
-              <p className="wins-item__step">{item.microStep}</p>
-            )}
-            {item.helpWorked && (
-              <p className="wins-item__help">
-                {COPY.wins.helped} {item.helpWorked}
-              </p>
-            )}
-            <p className="wins-item__when">{formatWhen(item.endedAt || item.startedAt)}</p>
-          </li>
-        ))}
+        {history.map((item) => {
+          const inProgress = !item.outcome
+          const preview = item.inputPreview || item.taskLabel || item.microStep
+          return (
+            <li key={item.id}>
+              <button
+                type="button"
+                className={`wins-item wins-item--clickable${inProgress ? ' wins-item--open' : ''}`}
+                onClick={() => {
+                  setDetailId(item.id)
+                  window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
+                }}
+              >
+                <div className="wins-item__top">
+                  <span className="wins-item__mode">
+                    {COPY.modeShort[item.mode as keyof typeof COPY.modeShort] || item.mode}
+                  </span>
+                  <span
+                    className={`wins-item__outcome wins-item__outcome--${item.outcome || 'none'}`}
+                  >
+                    {item.outcome
+                      ? COPY.outcomes[item.outcome as keyof typeof COPY.outcomes]
+                      : COPY.outcomes.progress}
+                  </span>
+                </div>
+                <p className="wins-item__task">{preview}</p>
+                {item.microStep && preview !== item.microStep && (
+                  <p className="wins-item__step">{item.microStep}</p>
+                )}
+                {item.helpWorked && (
+                  <p className="wins-item__help">
+                    {COPY.wins.helped} {item.helpWorked}
+                  </p>
+                )}
+                <div className="wins-item__foot">
+                  <p className="wins-item__when">{formatWhen(item.endedAt || item.startedAt)}</p>
+                  <span className="wins-item__open">{COPY.wins.open}</span>
+                </div>
+              </button>
+            </li>
+          )
+        })}
       </ul>
+
+      <WinDetailSheet sessionId={detailId} onClose={() => setDetailId(null)} />
     </motion.div>
   )
 }

@@ -15,7 +15,6 @@ export function UnfreezeResult() {
   const [finishing, setFinishing] = useState(false)
   const [anchorPulse, setAnchorPulse] = useState(0)
   const [regenerating, setRegenerating] = useState(false)
-  const [copied, setCopied] = useState(false)
   const [bucketsOpen, setBucketsOpen] = useState(true)
   const [whyOpen, setWhyOpen] = useState(false)
   const [planOpen, setPlanOpen] = useState(false)
@@ -25,7 +24,6 @@ export function UnfreezeResult() {
 
   useEffect(() => {
     if (!active) return
-    setCopied(false)
     setBucketsOpen(active.showBuckets)
     setWhyOpen(false)
     setPlanOpen(false)
@@ -64,17 +62,6 @@ export function UnfreezeResult() {
   function pickAlternate(alt: string) {
     applyAnchor(alt)
     setShowAlternates(false)
-  }
-
-  async function copyStep() {
-    try {
-      await navigator.clipboard.writeText(displayStep)
-      setCopied(true)
-      window.Telegram?.WebApp.HapticFeedback?.selectionChanged()
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* ignore */
-    }
   }
 
   async function closeSession(outcome: 'done' | 'enough' | 'cancelled', helpWorked = '') {
@@ -150,9 +137,6 @@ export function UnfreezeResult() {
           </button>
         )}
         {whyOpen && active.whyShort && <p className="unfreeze-card__reflection">{active.whyShort}</p>}
-        <button type="button" className="btn-copy" onClick={copyStep} disabled={busy}>
-          {copied ? COPY.result.copied : COPY.result.copyAnchor}
-        </button>
       </div>
 
       {regenerating && <p className="hint-line hint-line--pulse">{COPY.result.regenerating}</p>}

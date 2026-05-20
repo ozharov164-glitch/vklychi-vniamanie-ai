@@ -72,8 +72,6 @@ export const COPY = {
 
   result: {
     anchorEyebrow: 'Опора сейчас',
-    copyAnchor: 'Скопировать опору',
-    copied: 'Скопировано ✓',
     whyToggleOpen: '▼ Зачем именно это',
     whyToggleClose: '▲ Скрыть',
     priorityTitle: 'Что важнее сейчас?',
@@ -122,6 +120,14 @@ export const COPY = {
     streak: 'дней подряд',
     total: 'всего',
     today: 'сегодня',
+    requestsTitle: 'Твои запросы',
+    requestsHint: 'Нажми карточку — откроется полный разбор и опора.',
+    open: 'Открыть',
+    detailEyebrow: 'Архив шага',
+    detailTitle: 'Твой запрос',
+    detailRequest: 'Что ты написал(а)',
+    detailInsight: 'Разбор',
+    detailAnchor: 'Опора',
   },
 
   outcomes: {
