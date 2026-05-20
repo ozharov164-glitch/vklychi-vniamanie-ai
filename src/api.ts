@@ -6,6 +6,14 @@ const INIT_RETRY_MS = [0, 150, 400, 1000, 2500]
 let backend = ''
 
 export async function loadBackend(): Promise<void> {
+  const origin = window.location.origin.replace(/\/$/, '')
+  // Mini app на том же домене, что и API — без github.io и без ?backend=
+  if (origin && !origin.includes('github.io') && !origin.includes('localhost')) {
+    backend = origin
+    sessionStorage.setItem('fva_backend', backend)
+    return
+  }
+
   const q = new URLSearchParams(window.location.search).get('backend')?.trim()
   if (q?.startsWith('http')) {
     backend = q.replace(/\/$/, '')
