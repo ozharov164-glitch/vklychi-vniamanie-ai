@@ -40,11 +40,12 @@
       .boot-splash__logo {
         width: min(168px, 46vw);
         height: min(168px, 46vw);
-        border-radius: 50%;
-        object-fit: cover;
+        object-fit: contain;
+        background: transparent;
+        border-radius: 0;
         position: relative;
         z-index: 1;
-        box-shadow: 0 12px 40px rgba(245, 158, 66, 0.28);
+        filter: drop-shadow(0 12px 32px rgba(245, 158, 66, 0.35));
         animation: boot-float 3s ease-in-out infinite;
       }
       .boot-splash__title {
@@ -79,7 +80,7 @@
   </head>
   <body>
     <div id="boot-splash" aria-live="polite">
-      <img class="boot-splash__logo" src="/images/splash-logo.png" alt="" width="168" height="168" />
+      <img class="boot-splash__logo" src="/images/splash-logo.png" alt="" width="384" height="384" />
       <p class="boot-splash__title">ВключиВнимание</p>
       <p class="boot-splash__phase">Разморозка за 90 секунд…</p>
     </div>

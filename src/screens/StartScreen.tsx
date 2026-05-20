@@ -49,7 +49,7 @@ export function StartScreen() {
     return (
       <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <header className="start-hero start-hero--compact">
-          <img src={images.hero} alt="" className="start-hero__logo" />
+          <img src={images.hero} alt="" className="start-hero__logo" width={384} height={384} decoding="async" />
           <div>
             <p className="start-hero__eyebrow">90 секунд</p>
             <h1 className="start-hero__title">Разморозка</h1>
@@ -89,7 +89,7 @@ export function StartScreen() {
   return (
     <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <header className="start-hero">
-        <img src={images.hero} alt="" className="start-hero__logo" />
+        <img src={images.hero} alt="" className="start-hero__logo" width={384} height={384} decoding="async" />
         <div>
           <p className="start-hero__eyebrow">ВключиВнимание</p>
           <h1 className="start-hero__title">Разморозка за 90 секунд</h1>

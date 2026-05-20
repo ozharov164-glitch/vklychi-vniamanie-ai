@@ -22,7 +22,15 @@ export function SplashArt() {
           y: { duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 },
         }}
       >
-        <img src={splashLogo} alt="" className="splash-art__logo" draggable={false} />
+        <img
+          src={splashLogo}
+          alt=""
+          className="splash-art__logo"
+          width={384}
+          height={384}
+          decoding="async"
+          draggable={false}
+        />
       </motion.div>
     </div>
   )

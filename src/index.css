@@ -1085,17 +1085,18 @@ body::before {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 12px 40px rgba(245, 158, 66, 0.28);
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .splash-art__logo {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
+  filter: drop-shadow(0 10px 28px rgba(245, 158, 66, 0.35));
 }
 
 .splash__title--premium {
@@ -1420,14 +1421,15 @@ body::before {
 }
 
 .start-hero__logo {
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
   flex-shrink: 0;
   background: transparent;
   border: none;
   border-radius: 0;
   filter: drop-shadow(0 8px 20px rgba(245, 158, 66, 0.35));
+  image-rendering: auto;
 }
 
 .start-hero__eyebrow {
