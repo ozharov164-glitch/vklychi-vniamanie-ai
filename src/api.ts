@@ -79,8 +79,23 @@ export type FocusHistoryItem = {
   microStep: string
   outcome: string | null
   durationSec: number
+  helpWorked?: string
   startedAt: string
   endedAt: string | null
+}
+
+export type FocusMemoryItem = {
+  mode: string
+  microStep: string
+  helpWorked: string
+  outcome: string | null
+  endedAt: string | null
+}
+
+export type ThemeChoice = {
+  id: string
+  label: string
+  anchor: string
 }
 
 export type InitResponse = {
@@ -88,6 +103,7 @@ export type InitResponse = {
   isPremium: boolean
   aiUsage: { aiUsedToday: number; hintsLimit: number }
   stats: { sessionsToday: number; winsTotal: number; streakDays: number }
+  memory?: FocusMemoryItem[]
 }
 
 export type ActionResponse = {
@@ -112,6 +128,10 @@ export type ActionResponse = {
   later?: string[]
   release?: string[]
   lightest?: string
+  userQuote?: string
+  mechanism?: string
+  emotionalTone?: string
+  themeChoices?: ThemeChoice[]
   aiUsage?: { aiUsedToday: number; hintsLimit: number }
   cached?: boolean
 }
@@ -179,10 +199,15 @@ export async function apiTaskSteps(task: string, fearLevel: number, blocker: Blo
   })
 }
 
-export async function apiOutcome(sessionId: number, outcome: 'done' | 'partial' | 'enough') {
+export async function apiOutcome(
+  sessionId: number,
+  outcome: 'done' | 'partial' | 'enough',
+  helpWorked?: string,
+) {
   return post<{ ok: boolean; stats: InitResponse['stats'] }>('/mini-app/focus/outcome', {
     sessionId,
     outcome,
+    helpWorked: helpWorked || undefined,
   })
 }
 

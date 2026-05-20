@@ -20,7 +20,7 @@ const MODE_COPY: Record<UnfreezeMode, { title: string; hint: string; placeholder
   },
   noise: {
     title: 'Шум в голове',
-    hint: 'Выложи всё из головы — останется одно лёгкое.',
+    hint: 'Выложи всё из головы — одна опора по главной боли.',
     placeholder: 'Всё крутится: работа, дом, сообщения…',
     cardDesc: 'Много мыслей — разложим и выберем одно',
   },
@@ -58,6 +58,7 @@ function isOverload(text: string): boolean {
 
 export function StartScreen() {
   const premium = useAppStore((s) => s.premium)
+  const memory = useAppStore((s) => s.memory)
   const stats = useAppStore((s) => s.stats)
   const activeSession = useAppStore((s) => s.activeSession)
   const applyActionResponse = useAppStore((s) => s.applyActionResponse)
@@ -139,6 +140,13 @@ export function StartScreen() {
         </div>
       </header>
 
+      {memory.length > 0 && memory[0].helpWorked && (
+        <div className="memory-hint">
+          <p className="memory-hint__label">В прошлый раз помогло</p>
+          <p className="memory-hint__text">{memory[0].helpWorked}</p>
+        </div>
+      )}
+
       <div className="stat-grid">
         <div className="stat-card">
           <p className="stat-card__value">{stats.sessionsToday}</p>
@@ -197,6 +205,14 @@ export function StartScreen() {
 
           {step === 'input' && (
             <>
+              {mode === 'stuck' && isOverload(text) && text.trim().length >= 2 && (
+                <div className="overload-banner overload-banner--stuck">
+                  <p className="overload-banner__title">Похоже, навало</p>
+                  <p className="overload-banner__text">
+                    Сначала разберём мысли — не будем давить чек-листом по одной задаче.
+                  </p>
+                </div>
+              )}
               <VoiceTextField
                 id="focus-input"
                 multiline
@@ -215,7 +231,9 @@ export function StartScreen() {
                 {mode === 'noise' || isOverload(text)
                   ? loading
                     ? 'Разбираю навало…'
-                    : 'Разобрать навало'
+                    : mode === 'stuck' && isOverload(text)
+                      ? 'Сначала разобрать мысли'
+                      : 'Разобрать навало'
                   : 'Дальше'}
               </button>
             </>

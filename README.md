@@ -1,12 +1,21 @@
 # ⚓ ВключиВнимание
 
-Мини-приложение Telegram для экосистемы [ВключиСебя](https://t.me/CozyReset_bot): сброс мыслей, микро-шаги, таймер «рядом», якоря дня.
+Telegram Mini App экосистемы [ВключиСебя](https://t.me/CozyReset_bot): **«Застрял(а)»** — вход в задачу, **«Шум в голове»** — разбор навала и одна опора.
 
-- **Free:** базовый ИИ с дневным лимитом
-- **Premium:** более сильная модель ИИ, больше подсказок (одна подписка с «Путём к Себе»)
+- **Free:** Groq, 6 запросов ИИ в день  
+- **Premium:** DeepSeek (двухпроходный разбор), 12 запросов в день — одна подписка с «Путём к Себе»
+
+Без таймера, без интеграции с чек-инами — автономный инструмент.
+
+## Локально
+
+```bash
+npm install
+npm run dev
+```
+
+Бэкенд: API бота `POST /mini-app/focus/*` (см. `cozyreset-bot/services/focus_app_api.py`).
 
 ## Деплой
 
-Пуш в `main` → GitHub Pages: https://ozharov164-glitch.github.io/vklychi-vniamanie-ai/
-
-Бэкенд: API бота `/mini-app/focus/*`
+См. [DEPLOY.md](./DEPLOY.md).

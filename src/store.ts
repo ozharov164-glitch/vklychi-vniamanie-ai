@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ActionResponse, FocusHistoryItem, InitResponse } from './api'
+import type { ActionResponse, FocusHistoryItem, FocusMemoryItem, InitResponse, ThemeChoice } from './api'
 
 export type TabId = 'start' | 'wins'
 export type UnfreezeMode = 'stuck' | 'noise'
@@ -9,6 +9,9 @@ export type ActiveSession = {
   mode: UnfreezeMode
   insight: string
   userPriority: string
+  userQuote: string
+  mechanism: string
+  emotionalTone: string
   whyShort: string
   microStep: string
   taskLabel: string
@@ -16,6 +19,7 @@ export type ActiveSession = {
   planLater: string[]
   steps: string[]
   alternates: string[]
+  themeChoices: ThemeChoice[]
   showBuckets: boolean
   buckets: {
     now: string[]
@@ -30,6 +34,7 @@ type AppState = {
   premium: boolean
   aiUsage: { aiUsedToday: number; hintsLimit: number }
   stats: { sessionsToday: number; winsTotal: number; streakDays: number }
+  memory: FocusMemoryItem[]
   tab: TabId
   history: FocusHistoryItem[]
   activeSession: ActiveSession | null
@@ -48,6 +53,7 @@ export const useAppStore = create<AppState>((set) => ({
   premium: false,
   aiUsage: { aiUsedToday: 0, hintsLimit: 6 },
   stats: { sessionsToday: 0, winsTotal: 0, streakDays: 0 },
+  memory: [],
   tab: 'start',
   history: [],
   activeSession: null,
@@ -57,6 +63,7 @@ export const useAppStore = create<AppState>((set) => ({
       premium: d.isPremium,
       aiUsage: d.aiUsage,
       stats: d.stats,
+      memory: d.memory || [],
     }),
   setBootComplete: () => set({ ready: true }),
   setStats: (stats) => set({ stats }),
@@ -65,13 +72,23 @@ export const useAppStore = create<AppState>((set) => ({
   setActiveSession: (activeSession) => set({ activeSession }),
   applyActionResponse: (res, mode) => {
     const micro = res.microStep || res.lightest || ''
-    const alternates = (res.alternates || res.now || []).filter((s) => s && s !== micro).slice(0, 3)
+    const choices = (res.themeChoices || []).filter((c) => c.anchor && c.label)
+    const altFromChoices = choices.map((c) => c.anchor).filter((a) => a !== micro)
+    const alternates = [
+      ...altFromChoices,
+      ...(res.alternates || res.now || []).filter((s) => s && s !== micro),
+    ]
+      .filter((s, i, arr) => arr.indexOf(s) === i)
+      .slice(0, 4)
     set({
       activeSession: {
         sessionId: res.sessionId,
         mode,
         insight: res.insight || res.patternLine || '',
         userPriority: res.userPriority || '',
+        userQuote: res.userQuote || '',
+        mechanism: res.mechanism || '',
+        emotionalTone: res.emotionalTone || '',
         whyShort: res.whyShort || res.whyLightest || '',
         microStep: micro,
         taskLabel: res.taskLabel || 'Твой шаг',
@@ -79,6 +96,7 @@ export const useAppStore = create<AppState>((set) => ({
         planLater: res.planLater || res.nextSteps || [],
         steps: res.steps || [],
         alternates,
+        themeChoices: choices,
         showBuckets: mode === 'noise',
         buckets: {
           now: res.now || [],

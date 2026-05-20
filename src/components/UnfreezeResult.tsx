@@ -3,6 +3,14 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { apiOutcome } from '../api'
 import { useAppStore } from '../store'
 
+const HELP_OPTIONS = [
+  { id: 'anchor', label: 'Опора попала в точку' },
+  { id: 'focus', label: 'Сменил(а) фокус — стало яснее' },
+  { id: 'breath', label: 'Просто выдохнул(а)' },
+  { id: 'buckets', label: 'Помог разбор мыслей' },
+  { id: 'other', label: 'Другое — но сдвинулось' },
+]
+
 export function UnfreezeResult() {
   const active = useAppStore((s) => s.activeSession)
   const setActiveSession = useAppStore((s) => s.setActiveSession)
@@ -15,6 +23,7 @@ export function UnfreezeResult() {
   const [whyOpen, setWhyOpen] = useState(false)
   const [planOpen, setPlanOpen] = useState(false)
   const [showAlternates, setShowAlternates] = useState(false)
+  const [closePhase, setClosePhase] = useState<'idle' | 'help'>('idle')
 
   useEffect(() => {
     if (!active) return
@@ -24,6 +33,7 @@ export function UnfreezeResult() {
     setWhyOpen(false)
     setPlanOpen(false)
     setShowAlternates(false)
+    setClosePhase('idle')
   }, [active?.sessionId])
 
   const bucketCount = useMemo(() => {
@@ -37,6 +47,12 @@ export function UnfreezeResult() {
   const displayStep = microStep || active.microStep
   const alternatesVisible = active.alternates.filter((a) => a !== displayStep)
   const planItems = active.planLater.length ? active.planLater : active.steps.slice(1)
+  const hasThemePicker = active.themeChoices.length >= 2
+
+  function pickTheme(anchor: string) {
+    setMicroStep(anchor)
+    window.Telegram?.WebApp.HapticFeedback?.selectionChanged()
+  }
 
   function pickAlternate(alt: string) {
     setMicroStep(alt)
@@ -55,25 +71,32 @@ export function UnfreezeResult() {
     }
   }
 
-  async function closeSession(outcome: 'done' | 'enough') {
+  async function closeSession(outcome: 'done' | 'enough', helpWorked = '') {
     if (!active || finishing) return
     setFinishing(true)
     try {
-      const res = await apiOutcome(active.sessionId, outcome)
+      const res = await apiOutcome(active.sessionId, outcome, helpWorked)
       setStats(res.stats)
       setActiveSession(null)
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
     } finally {
       setFinishing(false)
+      setClosePhase('idle')
     }
+  }
+
+  function onDoneClick() {
+    setClosePhase('help')
   }
 
   return (
     <motion.div className="unfreeze-result stack" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       {active.userPriority && <p className="priority-line">{active.userPriority}</p>}
+      {active.userQuote && <p className="user-quote-line">«{active.userQuote}»</p>}
       {active.insight && <p className="insight-line">{active.insight}</p>}
+      {active.mechanism && <p className="mechanism-line">{active.mechanism}</p>}
 
-      <div className="unfreeze-card unfreeze-card--hero">
+      <div className={`unfreeze-card unfreeze-card--hero unfreeze-card--${active.mode}`}>
         <p className="unfreeze-card__eyebrow">Опора сейчас</p>
         {active.taskLabel && active.taskLabel !== displayStep && (
           <p className="unfreeze-card__label">{active.taskLabel}</p>
@@ -89,6 +112,25 @@ export function UnfreezeResult() {
           {copied ? 'Скопировано ✓' : 'Скопировать опору'}
         </button>
       </div>
+
+      {hasThemePicker && (
+        <div className="priority-picker">
+          <p className="priority-picker__title">Что важнее сейчас?</p>
+          <p className="priority-picker__hint">Без нового запроса к ИИ — выбери другой фокус.</p>
+          <div className="priority-picker__chips">
+            {active.themeChoices.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`priority-chip${displayStep === c.anchor ? ' priority-chip--on' : ''}`}
+                onClick={() => pickTheme(c.anchor)}
+              >
+                <span className="priority-chip__label">{c.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {active.showBuckets && bucketCount > 0 && (
         <div className="brain-buckets brain-buckets--open">
@@ -128,11 +170,45 @@ export function UnfreezeResult() {
         <p className="close-panel__title">Что дальше?</p>
         <p className="close-panel__hint">Не оценка. Ты решаешь, зачем тебе этот разбор.</p>
 
-        <button type="button" className="btn-primary" disabled={finishing} onClick={() => closeSession('done')}>
-          Сдвинулось — сохранить
-        </button>
+        {closePhase === 'idle' && (
+          <button type="button" className="btn-primary" disabled={finishing} onClick={onDoneClick}>
+            Сдвинулось — сохранить
+          </button>
+        )}
 
-        {alternatesVisible.length > 0 && (
+        {closePhase === 'help' && (
+          <motion.div
+            className="help-panel"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="help-panel__title">Что именно помогло?</p>
+            <p className="help-panel__hint">Один тап — чтобы в следующий раз помнить, что сработало.</p>
+            <div className="help-chips">
+              {HELP_OPTIONS.map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  className="help-chip"
+                  disabled={finishing}
+                  onClick={() => closeSession('done', o.label)}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={finishing}
+              onClick={() => closeSession('done')}
+            >
+              Пропустить
+            </button>
+          </motion.div>
+        )}
+
+        {alternatesVisible.length > 0 && closePhase === 'idle' && (
           <>
             <button
               type="button"
@@ -154,9 +230,11 @@ export function UnfreezeResult() {
           </>
         )}
 
-        <button type="button" className="btn-ghost" disabled={finishing} onClick={() => closeSession('enough')}>
-          Сохранить разбор и выйти
-        </button>
+        {closePhase === 'idle' && (
+          <button type="button" className="btn-ghost" disabled={finishing} onClick={() => closeSession('enough')}>
+            Сохранить разбор и выйти
+          </button>
+        )}
       </div>
 
       {planItems.length > 0 && (

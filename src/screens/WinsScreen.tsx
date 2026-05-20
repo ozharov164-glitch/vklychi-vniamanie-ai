@@ -106,6 +106,9 @@ export function WinsScreen() {
             {item.microStep && item.taskLabel !== item.microStep && (
               <p className="wins-item__step">{item.microStep}</p>
             )}
+            {item.helpWorked && (
+              <p className="wins-item__help">Помогло: {item.helpWorked}</p>
+            )}
             <p className="wins-item__when">{formatWhen(item.endedAt || item.startedAt)}</p>
           </li>
         ))}
