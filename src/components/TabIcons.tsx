@@ -27,7 +27,7 @@ export function ModeIcon({ mode }: { mode: 'stuck' | 'noise' }) {
   const src = mode === 'stuck' ? images.modeStuck : images.modeNoise
   return (
     <span className="mode-card__icon-wrap" aria-hidden>
-      <img src={src} alt="" className="mode-card__icon" width={52} height={52} loading="eager" decoding="async" />
+      <img src={src} alt="" className="mode-card__icon" width={64} height={64} loading="eager" decoding="async" />
     </span>
   )
 }
