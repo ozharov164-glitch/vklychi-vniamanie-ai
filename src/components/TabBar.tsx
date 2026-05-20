@@ -17,12 +17,16 @@ export function TabBar() {
         <button
           key={t.id}
           type="button"
-          className={`tab-bar__btn${tab === t.id ? ' tab-bar__btn--active' : ''}`}
+          className={`tab-btn${tab === t.id ? ' active' : ''}`}
           onClick={() => setTab(t.id)}
           aria-current={tab === t.id ? 'page' : undefined}
         >
-          <TabIcon id={t.id} active={tab === t.id} />
-          <span>{t.label}</span>
+          <span className="tab-btn__pill">
+            <span className="tab-btn__icon">
+              <TabIcon id={t.id} active={tab === t.id} />
+            </span>
+            <span className="tab-btn__label">{t.label}</span>
+          </span>
         </button>
       ))}
     </nav>
