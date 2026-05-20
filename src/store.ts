@@ -7,13 +7,13 @@ export type UnfreezeMode = 'stuck' | 'noise'
 export type ActiveSession = {
   sessionId: number
   mode: UnfreezeMode
-  reflection: string
-  patternLine: string
+  insight: string
+  whyShort: string
   microStep: string
   taskLabel: string
   nextSteps: string[]
   steps: string[]
-  whyLightest: string
+  alternates: string[]
   showBuckets: boolean
   buckets: {
     now: string[]
@@ -61,18 +61,20 @@ export const useAppStore = create<AppState>((set) => ({
   setAiUsage: (aiUsage) => set({ aiUsage }),
   setHistory: (history) => set({ history }),
   setActiveSession: (activeSession) => set({ activeSession }),
-  applyActionResponse: (res, mode) =>
+  applyActionResponse: (res, mode) => {
+    const micro = res.microStep || res.lightest || ''
+    const alternates = (res.alternates || res.now || []).filter((s) => s && s !== micro).slice(0, 3)
     set({
       activeSession: {
         sessionId: res.sessionId,
         mode,
-        reflection: res.reflection || res.whyLightest || '',
-        patternLine: res.patternLine || '',
-        microStep: res.microStep || res.lightest || '',
-        taskLabel: res.taskLabel || '',
+        insight: res.insight || res.patternLine || '',
+        whyShort: res.whyShort || res.whyLightest || '',
+        microStep: micro,
+        taskLabel: res.taskLabel || 'Твой шаг',
         nextSteps: res.nextSteps || [],
         steps: res.steps || [],
-        whyLightest: res.whyLightest || '',
+        alternates,
         showBuckets: mode === 'noise',
         buckets: {
           now: res.now || [],
@@ -81,5 +83,6 @@ export const useAppStore = create<AppState>((set) => ({
           release: res.release || [],
         },
       },
-    }),
+    })
+  },
 }))

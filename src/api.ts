@@ -94,13 +94,15 @@ export type ActionResponse = {
   ok: boolean
   sessionId: number
   mode: string
-  blocker?: string
+  insight?: string
+  whyShort?: string
   patternLine?: string
   reflection: string
   microStep: string
   taskLabel: string
   nextSteps: string[]
   steps?: string[]
+  alternates?: string[]
   whyLightest?: string
   now?: string[]
   today?: string[]
@@ -115,7 +117,6 @@ async function postFocusInit(body: Record<string, unknown>): Promise<InitRespons
   return postRaw<InitResponse>('/mini-app/focus/init', body)
 }
 
-/** Вход: сохранённый token → start_token из URL → initData с повторами. */
 export async function apiInit(): Promise<InitResponse> {
   refreshInitData()
 
@@ -137,7 +138,7 @@ export async function apiInit(): Promise<InitResponse> {
       setAuthToken(data.app_save_token)
       return data
     } catch {
-      /* start_token мог быть уже использован — пробуем initData */
+      /* */
     }
   }
 

@@ -3,7 +3,7 @@ export function PremiumBanner() {
     <div className="premium-banner">
       <p className="premium-banner__title">Премиум</p>
       <p className="premium-banner__text">
-        Больше подсказок ИИ в день, точнее разбор и дополнительные шаги после разморозки. Оформи в боте:
+        DeepSeek: глубже разбор мыслей, точнее шаг по твоей теме, больше запросов и выбор из списка. В боте:
         «💰 Тарифы».
       </p>
     </div>
