@@ -2011,6 +2011,72 @@ body::before {
   background: rgba(245, 158, 66, 0.1);
 }
 
+/* Мотивирующая строка */
+.power-line {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(135deg, rgba(232, 184, 74, 0.12), rgba(61, 214, 198, 0.06));
+}
+
+.power-line__text {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.power-line__author {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  font-style: normal;
+  color: var(--muted);
+}
+
+.btn-not-help {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fca5a5;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-not-help:disabled {
+  opacity: 0.55;
+}
+
+.btn-cancel {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.hint-line--pulse {
+  animation: pulse-hint 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-hint {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* v2: overload, memory, priority picker, help, light theme */
 .overload-banner {
   padding: 0.85rem 1rem;

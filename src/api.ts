@@ -132,8 +132,11 @@ export type ActionResponse = {
   mechanism?: string
   emotionalTone?: string
   themeChoices?: ThemeChoice[]
+  powerLine?: string
+  powerAuthor?: string
   aiUsage?: { aiUsedToday: number; hintsLimit: number }
   cached?: boolean
+  regenerated?: boolean
 }
 
 async function postFocusInit(body: Record<string, unknown>): Promise<InitResponse> {
@@ -199,9 +202,16 @@ export async function apiTaskSteps(task: string, fearLevel: number, blocker: Blo
   })
 }
 
+export async function apiRegenerate(sessionId: number, rejectedStep: string) {
+  return post<ActionResponse>('/mini-app/focus/regenerate', {
+    sessionId,
+    rejectedStep,
+  })
+}
+
 export async function apiOutcome(
   sessionId: number,
-  outcome: 'done' | 'partial' | 'enough',
+  outcome: 'done' | 'partial' | 'enough' | 'cancelled',
   helpWorked?: string,
 ) {
   return post<{ ok: boolean; stats: InitResponse['stats'] }>('/mini-app/focus/outcome', {

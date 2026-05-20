@@ -20,6 +20,8 @@ export type ActiveSession = {
   steps: string[]
   alternates: string[]
   themeChoices: ThemeChoice[]
+  powerLine: string
+  powerAuthor: string
   showBuckets: boolean
   buckets: {
     now: string[]
@@ -71,6 +73,8 @@ export const useAppStore = create<AppState>((set) => ({
   setHistory: (history) => set({ history }),
   setActiveSession: (activeSession) => set({ activeSession }),
   applyActionResponse: (res, mode) => {
+    const effectiveMode: UnfreezeMode =
+      res.mode === 'noise' ? 'noise' : res.mode === 'stuck' ? 'stuck' : mode
     const micro = res.microStep || res.lightest || ''
     const choices = (res.themeChoices || []).filter((c) => c.anchor && c.label)
     const altFromChoices = choices.map((c) => c.anchor).filter((a) => a !== micro)
@@ -83,7 +87,7 @@ export const useAppStore = create<AppState>((set) => ({
     set({
       activeSession: {
         sessionId: res.sessionId,
-        mode,
+        mode: effectiveMode,
         insight: res.insight || res.patternLine || '',
         userPriority: res.userPriority || '',
         userQuote: res.userQuote || '',
@@ -97,7 +101,10 @@ export const useAppStore = create<AppState>((set) => ({
         steps: res.steps || [],
         alternates,
         themeChoices: choices,
-        showBuckets: mode === 'noise',
+        powerLine: res.powerLine || '',
+        powerAuthor: res.powerAuthor || '',
+        showBuckets:
+          effectiveMode === 'noise' || Boolean((res.now?.length || 0) + (res.release?.length || 0)),
         buckets: {
           now: res.now || [],
           today: res.today || [],
