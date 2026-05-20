@@ -1,4 +1,7 @@
+import { getInitDataString, getStartTokenFromUrl, refreshInitData } from './lib/telegram'
+
 const TOKEN_KEY = 'fva_token'
+const INIT_RETRY_MS = [0, 150, 400, 1000, 2500]
 
 let backend = ''
 
@@ -40,22 +43,27 @@ export function getAuthToken(): string {
 }
 
 function authBody(extra: Record<string, unknown> = {}): Record<string, unknown> {
-  const tg = window.Telegram?.WebApp
   const token = getAuthToken()
   if (token) return { token, ...extra }
-  if (tg?.initData) return { initData: tg.initData, ...extra }
+  const initData = getInitDataString()
+  if (initData) return { initData, ...extra }
   return extra
 }
 
-async function post<T>(path: string, body: Record<string, unknown>): Promise<T> {
+async function postRaw<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  if (!backend) throw new Error('Сервер не настроен')
   const res = await fetch(`${backend}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(authBody(body)),
+    body: JSON.stringify(body),
   })
   const data = (await res.json()) as T & { error?: string }
-  if (!res.ok) throw new Error((data as { error?: string }).error || `Ошибка ${res.status}`)
+  if (!res.ok) throw new Error(data.error || `Ошибка ${res.status}`)
   return data
+}
+
+async function post<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  return postRaw<T>(path, authBody(body))
 }
 
 export type InitResponse = {
@@ -66,12 +74,52 @@ export type InitResponse = {
   stats: { sessionsToday: number; winsTotal: number }
 }
 
-export async function apiInit(startToken?: string): Promise<InitResponse> {
-  const body: Record<string, unknown> = {}
-  if (startToken) body.start_token = startToken
-  const data = await post<InitResponse>('/mini-app/focus/init', body)
-  setAuthToken(data.app_save_token)
-  return data
+async function postFocusInit(body: Record<string, unknown>): Promise<InitResponse> {
+  return postRaw<InitResponse>('/mini-app/focus/init', body)
+}
+
+/** Вход: сохранённый token → start_token из URL → initData с повторами. */
+export async function apiInit(): Promise<InitResponse> {
+  refreshInitData()
+
+  const saved = getAuthToken()
+  if (saved) {
+    try {
+      const data = await postFocusInit({ token: saved })
+      setAuthToken(data.app_save_token)
+      return data
+    } catch {
+      sessionStorage.removeItem(TOKEN_KEY)
+    }
+  }
+
+  const startToken = getStartTokenFromUrl()
+  if (startToken) {
+    try {
+      const data = await postFocusInit({ start_token: startToken, initData: getInitDataString() || undefined })
+      setAuthToken(data.app_save_token)
+      return data
+    } catch {
+      /* start_token мог быть уже использован — пробуем initData */
+    }
+  }
+
+  for (let i = 0; i < INIT_RETRY_MS.length; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, INIT_RETRY_MS[i]))
+    refreshInitData()
+    const initData = getInitDataString()
+    if (!initData) continue
+    try {
+      const data = await postFocusInit({ initData })
+      setAuthToken(data.app_save_token)
+      return data
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : ''
+      if (!msg.includes('401') && !msg.includes('авториза') && !msg.includes('устарел')) throw e
+    }
+  }
+
+  throw new Error('Не удалось войти. Закрой приложение и открой снова кнопкой в боте.')
 }
 
 export async function apiBrainDump(text: string) {

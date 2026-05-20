@@ -6,6 +6,7 @@ import { App } from './App'
 import { LoadingScreen } from './components/LoadingScreen'
 import { apiInit, loadBackend } from './api'
 import { delay, preloadImages } from './lib/preload'
+import { waitForTelegramReady } from './lib/telegram'
 import { useAppStore } from './store'
 
 const MIN_SPLASH_MS = 1400
@@ -21,8 +22,6 @@ function Boot() {
 
     async function run() {
       const tg = window.Telegram?.WebApp
-      tg?.ready()
-      tg?.expand()
       if (tg?.themeParams?.bg_color) {
         document.documentElement.style.setProperty('--tg-bg', tg.themeParams.bg_color)
       }
@@ -32,19 +31,11 @@ function Boot() {
         setProgress(18)
         setPhase('Связь с сервером…')
         await loadBackend()
-
-        setProgress(32)
-        const params = new URLSearchParams(window.location.search)
-        const startToken = params.get('start_token') || undefined
+        await waitForTelegramReady()
 
         setProgress(48)
         setPhase('Загружаем интерфейс…')
-        const [, data] = await Promise.all([
-          preloadImages(),
-          apiInit(startToken).catch((e) => {
-            throw e
-          }),
-        ])
+        const [, data] = await Promise.all([preloadImages(), apiInit()])
 
         if (cancelled) return
         useAppStore.getState().applyInit(data)
@@ -56,9 +47,9 @@ function Boot() {
 
         setProgress(100)
         if (!cancelled) useAppStore.getState().setBootComplete()
-      } catch {
+      } catch (e) {
         if (!cancelled) {
-          setFatal('Открой приложение из бота «ВключиСебя»')
+          setFatal(e instanceof Error ? e.message : 'Открой приложение из бота «ВключиСебя»')
         }
       }
     }
