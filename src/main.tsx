@@ -7,9 +7,10 @@ import { LoadingScreen } from './components/LoadingScreen'
 import { apiInit, loadBackend } from './api'
 import { delay, preloadImages } from './lib/preload'
 import { waitForTelegramReady } from './lib/telegram'
+import { lockAppViewport } from './lib/viewport'
 import { useAppStore } from './store'
 
-const MIN_SPLASH_MS = 1400
+const MIN_SPLASH_MS = 2400
 
 function Boot() {
   const ready = useAppStore((s) => s.ready)
@@ -21,6 +22,7 @@ function Boot() {
     let cancelled = false
 
     async function run() {
+      lockAppViewport()
       const tg = window.Telegram?.WebApp
       if (tg?.themeParams?.bg_color) {
         document.documentElement.style.setProperty('--tg-bg', tg.themeParams.bg_color)

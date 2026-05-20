@@ -14,6 +14,8 @@ type Props = {
   className?: string
 }
 
+type DockMode = 'idle' | 'recording' | 'processing'
+
 function isIOS(): boolean {
   return (
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -29,6 +31,20 @@ function pickMimeType(): string {
   return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || (isIOS() ? 'audio/mp4' : 'audio/webm')
 }
 
+function VoiceWaveform({ active }: { active: boolean }) {
+  return (
+    <div className="voice-waveform" aria-hidden>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <span
+          key={i}
+          className={`voice-waveform__bar ${active ? 'voice-waveform__bar--live' : 'voice-waveform__bar--idle'}`}
+          style={{ animationDelay: `${i * 0.12}s` }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export function VoiceTextField({
   id,
   value,
@@ -39,8 +55,7 @@ export function VoiceTextField({
   disabled = false,
   className = '',
 }: Props) {
-  const [recording, setRecording] = useState(false)
-  const [processing, setProcessing] = useState(false)
+  const [mode, setMode] = useState<DockMode>('idle')
   const [recordSeconds, setRecordSeconds] = useState(0)
   const [voiceError, setVoiceError] = useState('')
   const recorderRef = useRef<MediaRecorder | null>(null)
@@ -84,7 +99,7 @@ export function VoiceTextField({
       }
       recorder.start(200)
       recorderRef.current = recorder
-      setRecording(true)
+      setMode('recording')
       setRecordSeconds(0)
       timerRef.current = window.setInterval(() => setRecordSeconds((s) => s + 1), 1000)
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
@@ -109,7 +124,7 @@ export function VoiceTextField({
     chunksRef.current = []
     clearTimer()
     stopTracks()
-    setRecording(false)
+    setMode('idle')
     setRecordSeconds(0)
     window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
   }
@@ -118,8 +133,7 @@ export function VoiceTextField({
     const rec = recorderRef.current
     if (!rec || rec.state === 'inactive') return
     clearTimer()
-    setProcessing(true)
-    setRecording(false)
+    setMode('processing')
 
     const blob: Blob = await new Promise((resolve, reject) => {
       rec.onstop = () => {
@@ -150,75 +164,114 @@ export function VoiceTextField({
       setVoiceError(e instanceof Error ? e.message : 'Ошибка распознавания')
       window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('error')
     } finally {
-      setProcessing(false)
+      setMode('idle')
       setRecordSeconds(0)
     }
   }
 
-  const fieldClass = `input-field voice-field ${multiline ? 'input-field--area' : ''} ${className}`.trim()
   const mm = String(Math.floor(recordSeconds / 60)).padStart(2, '0')
   const ss = String(recordSeconds % 60).padStart(2, '0')
+  const shellClass = [
+    'voice-input',
+    mode === 'recording' ? 'voice-input--recording' : '',
+    mode === 'processing' ? 'voice-input--processing' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const controlClass = `voice-input__control ${multiline ? 'voice-input__control--area' : ''}`
 
   return (
-    <div className="voice-field-wrap">
+    <div className={shellClass}>
       {multiline ? (
         <textarea
           id={id}
-          className={fieldClass}
+          className={controlClass}
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          disabled={disabled || recording || processing}
+          disabled={disabled || mode !== 'idle'}
           rows={rows}
         />
       ) : (
         <input
           id={id}
-          className={fieldClass}
+          className={controlClass}
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          disabled={disabled || recording || processing}
+          disabled={disabled || mode !== 'idle'}
         />
       )}
 
-      <AnimatePresence>
-        {recording && (
-          <motion.div
-            className="voice-recording-bar"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-          >
-            <span className="voice-recording-bar__dot" />
-            <span className="voice-recording-bar__time">
-              {mm}:{ss}
-            </span>
-            <button type="button" className="voice-recording-bar__cancel" onClick={cancelRecording}>
-              Отмена
-            </button>
-            <button type="button" className="voice-recording-bar__send" onClick={finishRecording}>
-              Готово
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="voice-input__dock">
+        <AnimatePresence mode="wait" initial={false}>
+          {mode === 'recording' && (
+            <motion.div
+              key="rec"
+              className="voice-dock voice-dock--recording"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="voice-dock__rec-dot" />
+              <VoiceWaveform active />
+              <span className="voice-dock__time">
+                {mm}:{ss}
+              </span>
+              <div className="voice-dock__actions">
+                <button type="button" className="voice-dock__btn voice-dock__btn--ghost" onClick={cancelRecording}>
+                  Отмена
+                </button>
+                <button type="button" className="voice-dock__btn voice-dock__btn--accent" onClick={finishRecording}>
+                  Готово
+                </button>
+              </div>
+            </motion.div>
+          )}
 
-      {!recording && (
-        <button
-          type="button"
-          className={`voice-mic-btn ${processing ? 'voice-mic-btn--processing' : ''}`}
-          onClick={startRecording}
-          disabled={disabled || processing}
-          aria-label={processing ? 'Распознаю речь…' : 'Записать голосом'}
-          title="Записать голосом"
-        >
-          <MicrophoneIcon recording={processing} />
-        </button>
-      )}
+          {mode === 'processing' && (
+            <motion.div
+              key="proc"
+              className="voice-dock voice-dock--processing"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="voice-dock__spinner" />
+              <VoiceWaveform active={false} />
+              <span className="voice-dock__label">Распознаю речь…</span>
+            </motion.div>
+          )}
 
-      {voiceError && <p className="form-error voice-field__error">{voiceError}</p>}
-      {processing && !voiceError && <p className="voice-field__hint">Распознаю речь…</p>}
+          {mode === 'idle' && (
+            <motion.div
+              key="idle"
+              className="voice-dock voice-dock--idle"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="voice-dock__hint">Голосом или текстом</span>
+              <button
+                type="button"
+                className="voice-dock__mic"
+                onClick={startRecording}
+                disabled={disabled}
+                aria-label="Записать голосом"
+              >
+                <MicrophoneIcon />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {voiceError && <p className="form-error voice-input__error">{voiceError}</p>}
     </div>
   )
 }
