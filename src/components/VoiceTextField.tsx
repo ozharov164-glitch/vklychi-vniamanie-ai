@@ -14,15 +14,19 @@ type Props = {
   className?: string
 }
 
+function isIOS(): boolean {
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  )
+}
+
 function pickMimeType(): string {
-  const candidates = [
-    'audio/webm;codecs=opus',
-    'audio/webm',
-    'audio/ogg;codecs=opus',
-    'audio/mp4',
-  ]
-  if (typeof MediaRecorder === 'undefined') return 'audio/webm'
-  return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || 'audio/webm'
+  const candidates = isIOS()
+    ? ['audio/mp4', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus']
+    : ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+  if (typeof MediaRecorder === 'undefined') return isIOS() ? 'audio/mp4' : 'audio/webm'
+  return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || (isIOS() ? 'audio/mp4' : 'audio/webm')
 }
 
 export function VoiceTextField({
