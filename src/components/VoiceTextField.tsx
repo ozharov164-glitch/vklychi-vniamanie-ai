@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { apiTranscribe } from '../api'
+import { COPY } from '../lib/copy'
 import { MicrophoneIcon } from './MicrophoneIcon'
 
 type Props = {
@@ -85,7 +86,7 @@ export function VoiceTextField({
   async function startRecording() {
     setVoiceError('')
     if (!navigator.mediaDevices?.getUserMedia) {
-      setVoiceError('Микрофон недоступен в этом браузере')
+      setVoiceError(COPY.voice.micUnavailable)
       return
     }
     try {
@@ -104,7 +105,7 @@ export function VoiceTextField({
       timerRef.current = window.setInterval(() => setRecordSeconds((s) => s + 1), 1000)
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
     } catch {
-      setVoiceError('Разреши доступ к микрофону в настройках')
+      setVoiceError(COPY.voice.micDenied)
       stopTracks()
     }
   }
@@ -153,15 +154,15 @@ export function VoiceTextField({
     chunksRef.current = []
 
     try {
-      if (blob.size < 100) throw new Error('Запись слишком короткая')
+      if (blob.size < 100) throw new Error(COPY.voice.tooShort)
       const base64 = await blobToBase64(blob)
       const { text } = await apiTranscribe(base64, blob.type || pickMimeType())
       const trimmed = text.trim()
-      if (!trimmed) throw new Error('Не удалось распознать речь')
+      if (!trimmed) throw new Error(COPY.voice.recognizeFail)
       onChange(value ? `${value.trimEnd()}\n${trimmed}` : trimmed)
       window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('success')
     } catch (e) {
-      setVoiceError(e instanceof Error ? e.message : 'Ошибка распознавания')
+      setVoiceError(e instanceof Error ? e.message : COPY.voice.errorGeneric)
       window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('error')
     } finally {
       setMode('idle')
@@ -223,10 +224,10 @@ export function VoiceTextField({
               </span>
               <div className="voice-dock__actions">
                 <button type="button" className="voice-dock__btn voice-dock__btn--ghost" onClick={cancelRecording}>
-                  Отмена
+                  {COPY.voice.cancel}
                 </button>
                 <button type="button" className="voice-dock__btn voice-dock__btn--accent" onClick={finishRecording}>
-                  Готово
+                  {COPY.voice.done}
                 </button>
               </div>
             </motion.div>
@@ -243,7 +244,7 @@ export function VoiceTextField({
             >
               <span className="voice-dock__spinner" />
               <VoiceWaveform active={false} />
-              <span className="voice-dock__label">Распознаю речь…</span>
+              <span className="voice-dock__label">{COPY.voice.processing}</span>
             </motion.div>
           )}
 
@@ -256,7 +257,7 @@ export function VoiceTextField({
               exit={{ opacity: 0, y: 4 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             >
-              <span className="voice-dock__hint">Голосом или текстом</span>
+              <span className="voice-dock__hint">{COPY.voice.hint}</span>
               <button
                 type="button"
                 className="voice-dock__mic"

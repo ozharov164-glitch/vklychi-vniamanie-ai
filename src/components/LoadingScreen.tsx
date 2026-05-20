@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { COPY } from '../lib/copy'
 import { SplashArt } from './SplashArt'
 
 type Props = {
@@ -35,7 +36,7 @@ export function LoadingScreen({ progress, phase }: Props) {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.32, duration: 0.45 }}
       >
-        Одна опора — без давления
+        {COPY.splash.tagline}
       </motion.p>
 
       <AnimatePresence mode="wait">

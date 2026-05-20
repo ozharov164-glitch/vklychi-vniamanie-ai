@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { apiBrainDump, apiTaskSteps, apiUnfreeze, type BlockerId } from '../api'
+import { COPY } from '../lib/copy'
 import { useAppStore, type UnfreezeMode } from '../store'
 import { AiStatusLine } from '../components/AiStatusLine'
 import { PremiumBanner } from '../components/PremiumBanner'
@@ -11,26 +12,11 @@ import { images } from '../lib/assets'
 
 type Step = 'pick' | 'input' | 'blocker' | 'result'
 
-const MODE_COPY: Record<UnfreezeMode, { title: string; hint: string; placeholder: string; cardDesc: string }> = {
-  stuck: {
-    title: 'Застрял(а)',
-    hint: 'Назови задачу — получишь первый шаг без лекций.',
-    placeholder: 'Например: не могу открыть отчёт',
-    cardDesc: 'Знаю задачу — нужен первый шаг',
-  },
-  noise: {
-    title: 'Шум в голове',
-    hint: 'Выложи всё из головы — одна опора по главной боли.',
-    placeholder: 'Всё крутится: работа, дом, сообщения…',
-    cardDesc: 'Много мыслей — разложим и выберем одно',
-  },
-}
-
 const BLOCKERS: { id: BlockerId; label: string }[] = [
-  { id: 'fear', label: 'Страшно / тяжело' },
-  { id: 'fog', label: 'Неясно с чего' },
-  { id: 'low_energy', label: 'Мало сил' },
-  { id: 'perfection', label: 'Застрял на идеале' },
+  { id: 'fear', label: COPY.blockers.fear },
+  { id: 'fog', label: COPY.blockers.fog },
+  { id: 'low_energy', label: COPY.blockers.lowEnergy },
+  { id: 'perfection', label: COPY.blockers.perfection },
 ]
 
 function fearFromBlocker(blocker: BlockerId): number {
@@ -49,9 +35,9 @@ function isClearTask(text: string): boolean {
   return verb.test(t)
 }
 
-/** Несколько болей сразу — нужен разбор, не чек-лист учёбы. */
+/** Несколько болей сразу — разбор мыслей, не чек-лист по одной задаче. */
 function isOverload(text: string): boolean {
-  return /(алкогол|зависим|предательств|разрыв|девушк|навалил|кризис|мести|вина|устал|без\s*сил|тревог|паник|выгор|не\s*могу|бросить|плач)/i.test(
+  return /(алкогол|зависим|предательств|разрыв|девушк|навалил|перегруз|кризис|мести|вина|устал|без\s*сил|тревог|паник|выгор|не\s*могу|бросить|плач)/i.test(
     text,
   )
 }
@@ -86,8 +72,8 @@ export function StartScreen() {
         <header className="start-hero start-hero--compact">
           <img src={images.hero} alt="" className="start-hero__logo" width={384} height={384} decoding="async" />
           <div>
-            <p className="start-hero__eyebrow">ВключиВнимание</p>
-            <h1 className="start-hero__title">Твой шаг</h1>
+            <p className="start-hero__eyebrow">{COPY.appName}</p>
+            <h1 className="start-hero__title">{COPY.hero.resultTitle}</h1>
           </div>
         </header>
         <UnfreezeResult />
@@ -115,7 +101,7 @@ export function StartScreen() {
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
     } catch (e) {
       const err = e as Error & { limitReached?: boolean }
-      setError(err.message || 'Не удалось получить подсказку')
+      setError(err.message || COPY.errors.hint)
     } finally {
       setLoading(false)
     }
@@ -129,14 +115,25 @@ export function StartScreen() {
     setError('')
   }
 
+  const overload = mode === 'stuck' && isOverload(text) && text.trim().length >= 2
+
+  function primaryButtonLabel() {
+    if (mode === 'noise' || isOverload(text)) {
+      if (loading) return COPY.overload.btnLoading
+      if (overload) return COPY.overload.btnAnalyzeStuck
+      return COPY.overload.btnAnalyze
+    }
+    return COPY.actions.next
+  }
+
   return (
     <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <header className="start-hero">
         <img src={images.hero} alt="" className="start-hero__logo" width={384} height={384} decoding="async" />
         <div>
-          <p className="start-hero__eyebrow">ВключиВнимание</p>
-          <h1 className="start-hero__title">Один шаг вместо «надо бы»</h1>
-          <p className="start-hero__subtitle">Без стыда и давления. Два режима — под разную блокировку.</p>
+          <p className="start-hero__eyebrow">{COPY.appName}</p>
+          <h1 className="start-hero__title">{COPY.hero.title}</h1>
+          <p className="start-hero__subtitle">{COPY.hero.subtitle}</p>
         </div>
       </header>
 
@@ -145,7 +142,7 @@ export function StartScreen() {
         if (!tip?.helpWorked) return null
         return (
           <div className="memory-hint">
-            <p className="memory-hint__label">В прошлый раз помогло</p>
+            <p className="memory-hint__label">{COPY.memory.label}</p>
             <p className="memory-hint__text">{tip.helpWorked}</p>
           </div>
         )
@@ -154,17 +151,17 @@ export function StartScreen() {
       <div className="stat-grid">
         <div className="stat-card">
           <p className="stat-card__value">{stats.sessionsToday}</p>
-          <p className="stat-card__label">шагов сегодня</p>
+          <p className="stat-card__label">{COPY.stats.today}</p>
         </div>
         <div className="stat-card">
           <p className="stat-card__value stat-card__value--muted">{stats.winsTotal}</p>
-          <p className="stat-card__label">побед всего</p>
+          <p className="stat-card__label">{COPY.stats.total}</p>
         </div>
       </div>
 
       {step === 'pick' && (
         <>
-          <p className="section-label">Что мешает?</p>
+          <p className="section-label">{COPY.actions.whatBlocks}</p>
           <div className="mode-grid">
             <button
               type="button"
@@ -175,8 +172,8 @@ export function StartScreen() {
               }}
             >
               <ModeIcon mode="stuck" />
-              <span className="mode-card__title">Застрял(а)</span>
-              <span className="mode-card__desc">{MODE_COPY.stuck.cardDesc}</span>
+              <span className="mode-card__title">{COPY.modes.stuck.title}</span>
+              <span className="mode-card__desc">{COPY.modes.stuck.cardDesc}</span>
             </button>
             <button
               type="button"
@@ -187,8 +184,8 @@ export function StartScreen() {
               }}
             >
               <ModeIcon mode="noise" />
-              <span className="mode-card__title">Шум в голове</span>
-              <span className="mode-card__desc">{MODE_COPY.noise.cardDesc}</span>
+              <span className="mode-card__title">{COPY.modes.noise.title}</span>
+              <span className="mode-card__desc">{COPY.modes.noise.cardDesc}</span>
             </button>
           </div>
         </>
@@ -197,31 +194,29 @@ export function StartScreen() {
       {(step === 'input' || step === 'blocker') && mode && (
         <>
           <button type="button" className="link-back" onClick={step === 'blocker' ? () => setStep('input') : resetToPick}>
-            ← Назад
+            {COPY.actions.back}
           </button>
           <div className="mode-input-head">
             <ModeIcon mode={mode} />
             <div>
-              <p className="section-label section-label--inline">{MODE_COPY[mode].title}</p>
-              <p className="hint-line hint-line--tight">{MODE_COPY[mode].hint}</p>
+              <p className="section-label section-label--inline">{COPY.modes[mode].title}</p>
+              <p className="hint-line hint-line--tight">{COPY.modes[mode].hint}</p>
             </div>
           </div>
 
           {step === 'input' && (
             <>
-              {mode === 'stuck' && isOverload(text) && text.trim().length >= 2 && (
+              {overload && (
                 <div className="overload-banner overload-banner--stuck">
-                  <p className="overload-banner__title">Похоже, навало</p>
-                  <p className="overload-banner__text">
-                    Сначала разберём мысли — не будем давить чек-листом по одной задаче.
-                  </p>
+                  <p className="overload-banner__title">{COPY.overload.title}</p>
+                  <p className="overload-banner__text">{COPY.overload.text}</p>
                 </div>
               )}
               <VoiceTextField
                 id="focus-input"
                 multiline
                 rows={4}
-                placeholder={MODE_COPY[mode].placeholder}
+                placeholder={COPY.modes[mode].placeholder}
                 value={text}
                 onChange={setText}
                 disabled={loading}
@@ -230,22 +225,16 @@ export function StartScreen() {
                 type="button"
                 className="btn-primary btn-primary--glow"
                 disabled={loading || text.trim().length < 2}
-                onClick={() => (mode === 'stuck' ? setStep('blocker') : runAction())}
+                onClick={() => (mode === 'stuck' && !isOverload(text) ? setStep('blocker') : runAction())}
               >
-                {mode === 'noise' || isOverload(text)
-                  ? loading
-                    ? 'Разбираю навало…'
-                    : mode === 'stuck' && isOverload(text)
-                      ? 'Сначала разобрать мысли'
-                      : 'Разобрать навало'
-                  : 'Дальше'}
+                {primaryButtonLabel()}
               </button>
             </>
           )}
 
           {step === 'blocker' && mode === 'stuck' && (
             <>
-              <p className="section-label">Что ближе?</p>
+              <p className="section-label">{COPY.blockers.section}</p>
               <div className="blocker-chips">
                 {BLOCKERS.map((b) => (
                   <button
@@ -264,7 +253,7 @@ export function StartScreen() {
                 disabled={loading}
                 onClick={runAction}
               >
-                {loading ? 'Подбираю шаг…' : 'Получить первый шаг'}
+                {loading ? COPY.actions.pickingStep : COPY.actions.getStep}
               </button>
             </>
           )}
@@ -276,9 +265,7 @@ export function StartScreen() {
       <AiStatusLine />
       {!premium && <PremiumBanner />}
 
-      <p className="disclaimer">
-        Не диагностика СДВГ. Инструмент самопомощи при трудностях с вниманием и стартом задач.
-      </p>
+      <p className="disclaimer">{COPY.disclaimer}</p>
     </motion.div>
   )
 }

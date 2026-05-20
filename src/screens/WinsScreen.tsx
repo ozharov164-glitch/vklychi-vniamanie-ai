@@ -1,19 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { apiHistory } from '../api'
+import { COPY } from '../lib/copy'
 import { useAppStore } from '../store'
-
-const OUTCOME_LABEL: Record<string, string> = {
-  done: 'Сделал(а)',
-  partial: 'Частично',
-  enough: 'Достаточно',
-  '': 'В процессе',
-}
-
-const MODE_LABEL: Record<string, string> = {
-  stuck: 'Застрял(а)',
-  noise: 'Шум',
-}
 
 function formatWhen(iso: string | null) {
   if (!iso) return ''
@@ -45,7 +34,7 @@ export function WinsScreen() {
           setStats(res.stats)
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось загрузить')
+        if (!cancelled) setError(e instanceof Error ? e.message : COPY.errors.loadHistory)
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -63,33 +52,33 @@ export function WinsScreen() {
   return (
     <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <header className="wins-header">
-        <p className="start-hero__eyebrow">Твои шаги</p>
-        <h1 className="start-hero__title">Победы</h1>
-        <p className="start-hero__subtitle">Твои рабочие шаги. Даже «частично» — уже движение.</p>
+        <p className="start-hero__eyebrow">{COPY.wins.eyebrow}</p>
+        <h1 className="start-hero__title">{COPY.wins.title}</h1>
+        <p className="start-hero__subtitle">{COPY.wins.subtitle}</p>
       </header>
 
       <div className="stat-grid stat-grid--3">
         <div className="stat-card">
           <p className="stat-card__value">{stats.winsTotal}</p>
-          <p className="stat-card__label">всего</p>
+          <p className="stat-card__label">{COPY.wins.total}</p>
         </div>
         <div className="stat-card">
           <p className="stat-card__value stat-card__value--muted">{stats.sessionsToday}</p>
-          <p className="stat-card__label">сегодня</p>
+          <p className="stat-card__label">{COPY.wins.today}</p>
         </div>
         <div className="stat-card">
           <p className="stat-card__value stat-card__value--accent">{stats.streakDays || 0}</p>
-          <p className="stat-card__label">дней подряд</p>
+          <p className="stat-card__label">{COPY.wins.streak}</p>
         </div>
       </div>
 
-      {loading && <p className="hint-line">Загружаю…</p>}
+      {loading && <p className="hint-line">{COPY.wins.loading}</p>}
       {error && <p className="field-error">{error}</p>}
 
       {!loading && completed.length === 0 && (
         <div className="empty-wins">
-          <p>Пока пусто — и это нормально.</p>
-          <p className="hint-line">Сделай первый шаг на вкладке «Старт».</p>
+          <p>{COPY.wins.empty1}</p>
+          <p className="hint-line">{COPY.wins.empty2}</p>
         </div>
       )}
 
@@ -97,9 +86,9 @@ export function WinsScreen() {
         {completed.map((item) => (
           <li key={item.id} className="wins-item">
             <div className="wins-item__top">
-              <span className="wins-item__mode">{MODE_LABEL[item.mode] || item.mode}</span>
+              <span className="wins-item__mode">{COPY.modeShort[item.mode as keyof typeof COPY.modeShort] || item.mode}</span>
               <span className={`wins-item__outcome wins-item__outcome--${item.outcome || 'none'}`}>
-                {OUTCOME_LABEL[item.outcome || '']}
+                {COPY.outcomes[item.outcome as keyof typeof COPY.outcomes] || COPY.outcomes.progress}
               </span>
             </div>
             <p className="wins-item__task">{item.taskLabel || item.microStep}</p>
@@ -107,7 +96,9 @@ export function WinsScreen() {
               <p className="wins-item__step">{item.microStep}</p>
             )}
             {item.helpWorked && (
-              <p className="wins-item__help">Помогло: {item.helpWorked}</p>
+              <p className="wins-item__help">
+                {COPY.wins.helped} {item.helpWorked}
+              </p>
             )}
             <p className="wins-item__when">{formatWhen(item.endedAt || item.startedAt)}</p>
           </li>

@@ -1,3 +1,4 @@
+import { COPY } from './lib/copy'
 import { getInitDataString, getStartTokenFromUrl, refreshInitData } from './lib/telegram'
 
 const TOKEN_KEY = 'fva_token'
@@ -51,7 +52,7 @@ function authBody(extra: Record<string, unknown> = {}): Record<string, unknown> 
 }
 
 async function postRaw<T>(path: string, body: Record<string, unknown>): Promise<T> {
-  if (!backend) throw new Error('Сервер не настроен')
+  if (!backend) throw new Error(COPY.errors.noBackend)
   const res = await fetch(`${backend}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -183,7 +184,7 @@ export async function apiInit(): Promise<InitResponse> {
     }
   }
 
-  throw new Error('Не удалось войти. Закрой приложение и открой снова кнопкой в боте.')
+  throw new Error(COPY.errors.auth)
 }
 
 export async function apiUnfreeze(mode: 'stuck' | 'noise', text: string, blocker: BlockerId = '') {

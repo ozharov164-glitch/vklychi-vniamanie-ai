@@ -8,6 +8,7 @@ import { apiInit, loadBackend } from './api'
 import { delay, preloadImages } from './lib/preload'
 import { waitForTelegramReady } from './lib/telegram'
 import { lockAppViewport } from './lib/viewport'
+import { COPY } from './lib/copy'
 import { useAppStore } from './store'
 
 const MIN_SPLASH_MS = 2400
@@ -19,7 +20,7 @@ function removeBootSplash() {
 function Boot() {
   const ready = useAppStore((s) => s.ready)
   const [progress, setProgress] = useState(12)
-  const [phase, setPhase] = useState('Подключаемся…')
+  const [phase, setPhase] = useState(COPY.splash.phases.connecting)
   const [fatal, setFatal] = useState('')
 
   useEffect(() => {
@@ -40,19 +41,19 @@ function Boot() {
       const t0 = Date.now()
       try {
         setProgress(18)
-        setPhase('Связь с сервером…')
+        setPhase(COPY.splash.phases.server)
         await loadBackend()
         await waitForTelegramReady()
 
         setProgress(48)
-        setPhase('Загружаем интерфейс…')
+        setPhase(COPY.splash.phases.ui)
         const [, data] = await Promise.all([preloadImages(), apiInit()])
 
         if (cancelled) return
         useAppStore.getState().applyInit(data)
 
         setProgress(88)
-        setPhase('Почти готово…')
+        setPhase(COPY.splash.phases.almost)
         const elapsed = Date.now() - t0
         if (elapsed < MIN_SPLASH_MS) await delay(MIN_SPLASH_MS - elapsed)
 
@@ -60,7 +61,7 @@ function Boot() {
         if (!cancelled) useAppStore.getState().setBootComplete()
       } catch (e) {
         if (!cancelled) {
-          setFatal(e instanceof Error ? e.message : 'Открой приложение из бота «ВключиСебя»')
+          setFatal(e instanceof Error ? e.message : COPY.splash.fatal)
         }
       }
     }
