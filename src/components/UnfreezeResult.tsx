@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { apiOutcome, apiRegenerate } from '../api'
+import { apiOutcome, apiRegenerate, type ThemeChoice } from '../api'
 import { COPY } from '../lib/copy'
 import { useAppStore } from '../store'
 
@@ -10,9 +10,10 @@ export function UnfreezeResult() {
   const setActiveSession = useAppStore((s) => s.setActiveSession)
   const setStats = useAppStore((s) => s.setStats)
   const setAiUsage = useAppStore((s) => s.setAiUsage)
+  const setMicroStep = useAppStore((s) => s.setMicroStep)
 
-  const [microStep, setMicroStep] = useState('')
   const [finishing, setFinishing] = useState(false)
+  const [anchorPulse, setAnchorPulse] = useState(0)
   const [regenerating, setRegenerating] = useState(false)
   const [copied, setCopied] = useState(false)
   const [bucketsOpen, setBucketsOpen] = useState(true)
@@ -24,7 +25,6 @@ export function UnfreezeResult() {
 
   useEffect(() => {
     if (!active) return
-    setMicroStep(active.microStep)
     setCopied(false)
     setBucketsOpen(active.showBuckets)
     setWhyOpen(false)
@@ -32,7 +32,8 @@ export function UnfreezeResult() {
     setShowAlternates(false)
     setClosePhase('idle')
     setError('')
-  }, [active?.sessionId, active?.microStep])
+    setAnchorPulse(0)
+  }, [active?.sessionId])
 
   const bucketCount = useMemo(() => {
     if (!active) return 0
@@ -42,21 +43,27 @@ export function UnfreezeResult() {
 
   if (!active) return null
 
-  const displayStep = microStep || active.microStep
+  const displayStep = active.microStep
   const alternatesVisible = active.alternates.filter((a) => a !== displayStep)
   const planItems = active.planLater.length ? active.planLater : active.steps.slice(1)
-  const hasThemePicker = active.themeChoices.length >= 2
+  const hasThemePicker = active.themeChoices.length >= 1
   const busy = finishing || regenerating
 
-  function pickTheme(anchor: string) {
+  function applyAnchor(anchor: string) {
+    if (!anchor || anchor === displayStep) return
     setMicroStep(anchor)
-    window.Telegram?.WebApp.HapticFeedback?.selectionChanged()
+    setAnchorPulse((n) => n + 1)
+    window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
+    document.getElementById('focus-anchor-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
+
+  function pickTheme(choice: ThemeChoice) {
+    applyAnchor(choice.anchor)
   }
 
   function pickAlternate(alt: string) {
-    setMicroStep(alt)
+    applyAnchor(alt)
     setShowAlternates(false)
-    window.Telegram?.WebApp.HapticFeedback?.selectionChanged()
   }
 
   async function copyStep() {
@@ -119,12 +126,24 @@ export function UnfreezeResult() {
       {active.userQuote && <p className="user-quote-line">«{active.userQuote}»</p>}
       {active.insight && <p className="insight-line">{active.insight}</p>}
 
-      <div className={`unfreeze-card unfreeze-card--hero unfreeze-card--${active.mode}`}>
+      <div
+        id="focus-anchor-card"
+        className={`unfreeze-card unfreeze-card--hero unfreeze-card--${active.mode}${anchorPulse ? ' unfreeze-card--pulse' : ''}`}
+        key={`anchor-${anchorPulse}-${displayStep.slice(0, 24)}`}
+      >
         <p className="unfreeze-card__eyebrow">{COPY.result.anchorEyebrow}</p>
         {active.taskLabel && active.taskLabel !== displayStep && !/^[A-Z_]+$/.test(active.taskLabel) && (
           <p className="unfreeze-card__label">{active.taskLabel}</p>
         )}
-        <p className="unfreeze-card__step">{displayStep}</p>
+        <motion.p
+          className="unfreeze-card__step"
+          key={displayStep}
+          initial={{ opacity: 0.4, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28 }}
+        >
+          {displayStep}
+        </motion.p>
         {active.whyShort && (
           <button type="button" className="why-toggle" onClick={() => setWhyOpen((o) => !o)}>
             {whyOpen ? COPY.result.whyToggleClose : COPY.result.whyToggleOpen}
@@ -144,17 +163,21 @@ export function UnfreezeResult() {
           <p className="priority-picker__title">{COPY.result.priorityTitle}</p>
           <p className="priority-picker__hint">{COPY.result.priorityHint}</p>
           <div className="priority-picker__chips">
-            {active.themeChoices.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className={`priority-chip${displayStep === c.anchor ? ' priority-chip--on' : ''}`}
-                onClick={() => pickTheme(c.anchor)}
-                disabled={busy}
-              >
-                <span className="priority-chip__label">{c.label}</span>
-              </button>
-            ))}
+            {active.themeChoices.map((c) => {
+              const on = displayStep === c.anchor
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`priority-chip${on ? ' priority-chip--on' : ''}`}
+                  onClick={() => pickTheme(c)}
+                  disabled={busy}
+                >
+                  <span className="priority-chip__label">{c.label}</span>
+                  {on && <span className="priority-chip__badge">{COPY.result.priorityApplied}</span>}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}

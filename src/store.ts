@@ -47,6 +47,7 @@ type AppState = {
   setAiUsage: (u: { aiUsedToday: number; hintsLimit: number }) => void
   setHistory: (items: FocusHistoryItem[]) => void
   setActiveSession: (u: ActiveSession | null) => void
+  setMicroStep: (microStep: string) => void
   applyActionResponse: (res: ActionResponse, mode: UnfreezeMode) => void
 }
 
@@ -72,16 +73,24 @@ export const useAppStore = create<AppState>((set) => ({
   setAiUsage: (aiUsage) => set({ aiUsage }),
   setHistory: (history) => set({ history }),
   setActiveSession: (activeSession) => set({ activeSession }),
+  setMicroStep: (microStep) =>
+    set((state) =>
+      state.activeSession
+        ? { activeSession: { ...state.activeSession, microStep } }
+        : state,
+    ),
   applyActionResponse: (res, mode) => {
     const effectiveMode: UnfreezeMode =
       res.mode === 'noise' ? 'noise' : res.mode === 'stuck' ? 'stuck' : mode
     const micro = res.microStep || res.lightest || ''
     const choices = (res.themeChoices || []).filter((c) => c.anchor && c.label)
-    const altFromChoices = choices.map((c) => c.anchor).filter((a) => a !== micro)
+    const choiceAnchors = new Set(choices.map((c) => c.anchor))
     const alternates = [
-      ...altFromChoices,
-      ...(res.alternates || res.now || []).filter((s) => s && s !== micro),
+      ...(res.alternates || []),
+      ...(res.now || []),
+      ...(res.today || []),
     ]
+      .filter((s) => s && s !== micro && !choiceAnchors.has(s))
       .filter((s, i, arr) => arr.indexOf(s) === i)
       .slice(0, 4)
     set({
