@@ -922,8 +922,12 @@ body::before {
   bottom: 0;
   left: 0;
   right: 0;
-  display: flex;
-  align-items: stretch;
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.35rem;
   padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
   background: rgba(6, 9, 14, 0.96);
@@ -933,7 +937,7 @@ body::before {
 }
 
 .tab-btn {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   padding: 0;
   background: none;

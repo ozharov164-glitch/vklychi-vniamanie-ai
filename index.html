@@ -79,6 +79,26 @@
     </style>
   </head>
   <body>
+    <script>
+      (function () {
+        var q = new URLSearchParams(location.search)
+        var v = (q.get('app_v') || '').trim()
+        if (!v) return
+        var k = 'fva_app_v'
+        try {
+          var prev = sessionStorage.getItem(k)
+          if (prev && prev !== v) {
+            var b = sessionStorage.getItem('fva_backend')
+            sessionStorage.clear()
+            if (b) sessionStorage.setItem('fva_backend', b)
+            sessionStorage.setItem(k, v)
+            location.replace(location.href)
+            return
+          }
+          sessionStorage.setItem(k, v)
+        } catch (e) {}
+      })()
+    </script>
     <div id="boot-splash" aria-live="polite">
       <img class="boot-splash__logo" src="/images/splash-logo.png" alt="" width="384" height="384" />
       <p class="boot-splash__title">ВключиВнимание</p>
