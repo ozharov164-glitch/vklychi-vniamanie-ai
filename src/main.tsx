@@ -12,6 +12,10 @@ import { useAppStore } from './store'
 
 const MIN_SPLASH_MS = 2400
 
+function removeBootSplash() {
+  document.getElementById('boot-splash')?.remove()
+}
+
 function Boot() {
   const ready = useAppStore((s) => s.ready)
   const [progress, setProgress] = useState(12)
@@ -19,6 +23,7 @@ function Boot() {
   const [fatal, setFatal] = useState('')
 
   useEffect(() => {
+    removeBootSplash()
     let cancelled = false
 
     async function run() {
@@ -63,6 +68,7 @@ function Boot() {
   }, [])
 
   if (fatal) {
+    removeBootSplash()
     return <p className="splash-fatal">{fatal}</p>
   }
 

@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>⚓ ВключиВнимание</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -10,9 +13,76 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="preload" href="/images/splash-logo.png" as="image" type="image/png" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #080c12;
+        color: #eef3fa;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        text-align: center;
+        padding: 2rem 1.5rem;
+      }
+      #boot-splash::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 80% 50% at 50% 30%, rgba(245, 158, 66, 0.18), transparent 65%);
+        pointer-events: none;
+      }
+      .boot-splash__logo {
+        width: min(168px, 46vw);
+        height: min(168px, 46vw);
+        border-radius: 50%;
+        object-fit: cover;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 12px 40px rgba(245, 158, 66, 0.28);
+        animation: boot-float 3s ease-in-out infinite;
+      }
+      .boot-splash__title {
+        margin: 1.1rem 0 0;
+        font-size: 1.45rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        background: linear-gradient(135deg, #fff7ed, #f59e42 55%, #ffd08a);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        position: relative;
+        z-index: 1;
+      }
+      .boot-splash__phase {
+        margin: 0.5rem 0 0;
+        font-size: 0.82rem;
+        color: #8fa3be;
+        position: relative;
+        z-index: 1;
+      }
+      @keyframes boot-float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-splash" aria-live="polite">
+      <img class="boot-splash__logo" src="/images/splash-logo.png" alt="" width="168" height="168" />
+      <p class="boot-splash__title">ВключиВнимание</p>
+      <p class="boot-splash__phase">Подключаемся…</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

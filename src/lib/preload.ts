@@ -1,6 +1,7 @@
 import { images } from './assets'
+import splashLogo from '../assets/splash-logo.png'
 
-const ALL_IMAGES = Object.values(images)
+const ALL_IMAGES = [...Object.values(images), splashLogo]
 
 export function preloadImages(urls: string[] = ALL_IMAGES): Promise<void> {
   return Promise.all(

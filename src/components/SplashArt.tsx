@@ -1,53 +1,28 @@
 import { motion } from 'framer-motion'
-
-const base = import.meta.env.BASE_URL
-
-export const splashLogo = `${base}images/splash-logo.png`
-export const splashLogoGlow = `${base}images/splash-logo-glow.png`
+import splashLogo from '../assets/splash-logo.png'
 
 export function SplashArt() {
   return (
     <div className="splash-art" aria-hidden>
-      <motion.div
-        className="splash-art__ambient"
-        animate={{ opacity: [0.45, 0.75, 0.45], scale: [0.95, 1.05, 0.95] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      <div className="splash-art__halo" />
 
       <motion.span
-        className="splash-art__orbit splash-art__orbit--outer"
+        className="splash-art__ring"
         animate={{ rotate: 360 }}
-        transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
-      />
-      <motion.span
-        className="splash-art__orbit splash-art__orbit--inner"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+        transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
       />
 
       <motion.div
-        className="splash-art__logo-wrap"
-        initial={{ opacity: 0, scale: 0.72, filter: 'blur(12px)' }}
-        animate={{
-          opacity: 1,
-          scale: 1,
-          filter: 'blur(0px)',
-          y: [0, -7, 0],
-        }}
+        className="splash-art__logo-shell"
+        initial={{ opacity: 0, scale: 0.88 }}
+        animate={{ opacity: 1, scale: [1, 1.03, 1], y: [0, -5, 0] }}
         transition={{
-          opacity: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
-          scale: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
-          filter: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
-          y: { duration: 3.6, repeat: Infinity, ease: 'easeInOut', delay: 0.85 },
+          opacity: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+          scale: { duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 },
+          y: { duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 },
         }}
       >
-        <img src={splashLogoGlow} alt="" className="splash-art__logo-glow" draggable={false} />
         <img src={splashLogo} alt="" className="splash-art__logo" draggable={false} />
-        <motion.span
-          className="splash-art__shimmer"
-          animate={{ x: ['-130%', '130%'] }}
-          transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.2 }}
-        />
       </motion.div>
     </div>
   )
