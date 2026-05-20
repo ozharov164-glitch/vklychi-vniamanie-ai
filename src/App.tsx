@@ -1,21 +1,15 @@
 import { useAppStore } from './store'
 import { TabBar } from './components/TabBar'
-import { FocusTimer } from './components/FocusTimer'
-import { HomeScreen } from './screens/HomeScreen'
-import { DumpScreen } from './screens/DumpScreen'
-import { StepsScreen } from './screens/StepsScreen'
-import { TodayScreen } from './screens/TodayScreen'
+import { StartScreen } from './screens/StartScreen'
+import { WinsScreen } from './screens/WinsScreen'
 
 export function App() {
   const tab = useAppStore((s) => s.tab)
 
   return (
     <div className="app-shell">
-      {tab === 'home' && <HomeScreen />}
-      {tab === 'dump' && <DumpScreen />}
-      {tab === 'steps' && <StepsScreen />}
-      {tab === 'focus' && <FocusTimer />}
-      {tab === 'today' && <TodayScreen />}
+      {tab === 'start' && <StartScreen />}
+      {tab === 'wins' && <WinsScreen />}
       <TabBar />
     </div>
   )

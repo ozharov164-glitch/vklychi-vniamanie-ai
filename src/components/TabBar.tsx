@@ -2,11 +2,8 @@ import { useAppStore, type TabId } from '../store'
 import { TabIcon } from './TabIcons'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'home', label: 'Главная' },
-  { id: 'dump', label: 'Сброс' },
-  { id: 'steps', label: 'Шаги' },
-  { id: 'focus', label: 'Рядом' },
-  { id: 'today', label: 'День' },
+  { id: 'start', label: 'Разморозка' },
+  { id: 'wins', label: 'Победы' },
 ]
 
 export function TabBar() {

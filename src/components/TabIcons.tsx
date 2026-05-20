@@ -5,70 +5,39 @@ type IconProps = { active?: boolean }
 
 const stroke = (active?: boolean) => (active ? 'var(--accent)' : 'currentColor')
 
-export function IconHome({ active }: IconProps) {
+export function IconStart({ active }: IconProps) {
   const s = stroke(active)
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden className="tab-icon-svg">
       <path
-        d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6.5h-6V20.5H5.5A1.5 1.5 0 0 1 4 19v-8.5Z"
+        d="M12 3v4M12 17v4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M3 12h4M17 12h4M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"
         stroke={s}
-        strokeWidth="1.65"
-        strokeLinejoin="round"
+        strokeWidth="1.55"
+        strokeLinecap="round"
       />
+      <circle cx="12" cy="12" r="3.5" stroke={s} strokeWidth="1.55" fill={active ? 'var(--accent)' : 'none'} />
     </svg>
   )
 }
 
-export function IconDump({ active }: IconProps) {
-  const s = stroke(active)
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="tab-icon-svg">
-      <circle cx="12" cy="12" r="7.25" stroke={s} strokeWidth="1.55" opacity={active ? 1 : 0.55} />
-      <circle cx="12" cy="12" r="2.35" stroke={s} strokeWidth="1.55" />
-    </svg>
-  )
-}
-
-export function IconSteps({ active }: IconProps) {
+export function IconWins({ active }: IconProps) {
   const s = stroke(active)
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden className="tab-icon-svg">
       <path
-        d="M9.5 7.2 15.8 12 9.5 16.8V7.2Z"
-        fill={active ? 'var(--accent)' : 'none'}
+        d="M8 4h8l1 4H7l1-4ZM7 8h10l-1.2 10H8.2L7 8Z"
         stroke={s}
         strokeWidth="1.55"
         strokeLinejoin="round"
       />
-    </svg>
-  )
-}
-
-export function IconFocus({ active }: IconProps) {
-  const s = stroke(active)
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="tab-icon-svg">
-      <circle cx="12" cy="12" r="7.25" stroke={s} strokeWidth="1.55" opacity={active ? 1 : 0.55} />
-      <circle cx="12" cy="12" r="2.6" fill={active ? 'var(--accent)' : s} />
-    </svg>
-  )
-}
-
-export function IconToday({ active }: IconProps) {
-  const s = stroke(active)
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="tab-icon-svg">
-      <path d="M6 8.2h12M6 12h12M6 15.8h12" stroke={s} strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M9.5 12.5 11 14l3.5-4" stroke={active ? 'var(--accent)' : s} strokeWidth="1.65" strokeLinecap="round" />
     </svg>
   )
 }
 
 const MAP: Record<TabId, (p: IconProps) => ReactElement> = {
-  home: IconHome,
-  dump: IconDump,
-  steps: IconSteps,
-  focus: IconFocus,
-  today: IconToday,
+  start: IconStart,
+  wins: IconWins,
 }
 
 export function TabIcon({ id, active }: { id: TabId; active?: boolean }) {

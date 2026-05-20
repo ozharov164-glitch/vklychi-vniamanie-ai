@@ -57,8 +57,12 @@ async function postRaw<T>(path: string, body: Record<string, unknown>): Promise<
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  const data = (await res.json()) as T & { error?: string }
-  if (!res.ok) throw new Error(data.error || `Ошибка ${res.status}`)
+  const data = (await res.json()) as T & { error?: string; limitReached?: boolean }
+  if (!res.ok) {
+    const err = new Error(data.error || `Ошибка ${res.status}`) as Error & { limitReached?: boolean }
+    err.limitReached = data.limitReached
+    throw err
+  }
   return data
 }
 
@@ -66,12 +70,34 @@ async function post<T>(path: string, body: Record<string, unknown>): Promise<T> 
   return postRaw<T>(path, authBody(body))
 }
 
+export type FocusHistoryItem = {
+  id: number
+  mode: string
+  taskLabel: string
+  microStep: string
+  outcome: string | null
+  durationSec: number
+  startedAt: string
+  endedAt: string | null
+}
+
 export type InitResponse = {
   app_save_token: string
   isPremium: boolean
-  aiUsage: { groqCount: number; deepseekCount: number }
-  limits: { groqDaily: number; deepseekDaily: number }
-  stats: { sessionsToday: number; winsTotal: number }
+  aiUsage: { aiUsedToday: number; hintsLimit: number }
+  stats: { sessionsToday: number; winsTotal: number; streakDays: number }
+}
+
+export type UnfreezeResponse = {
+  ok: boolean
+  sessionId: number
+  mode: string
+  reflection: string
+  microStep: string
+  taskLabel: string
+  nextSteps: string[]
+  durationSec: number
+  aiUsage?: { aiUsedToday: number; hintsLimit: number }
 }
 
 async function postFocusInit(body: Record<string, unknown>): Promise<InitResponse> {
@@ -122,36 +148,22 @@ export async function apiInit(): Promise<InitResponse> {
   throw new Error('Не удалось войти. Закрой приложение и открой снова кнопкой в боте.')
 }
 
-export async function apiBrainDump(text: string) {
-  return post<{
-    ok: boolean
-    now: string[]
-    today: string[]
-    later: string[]
-    release: string[]
-    lightest: string
-    aiUsage?: { groqCount: number; deepseekCount: number }
-  }>('/mini-app/focus/brain-dump', { text })
+export async function apiUnfreeze(mode: 'stuck' | 'noise', text: string) {
+  return post<UnfreezeResponse>('/mini-app/focus/unfreeze', { mode, text })
 }
 
-export async function apiSteps(task: string, fearLevel: number) {
-  return post<{
-    ok: boolean
-    steps: string[]
-    first_micro: string
-    cached?: boolean
-    aiUsage?: { groqCount: number; deepseekCount: number }
-  }>('/mini-app/focus/steps', { task, fearLevel })
+export async function apiOutcome(sessionId: number, outcome: 'done' | 'partial' | 'enough') {
+  return post<{ ok: boolean; stats: InitResponse['stats'] }>('/mini-app/focus/outcome', {
+    sessionId,
+    outcome,
+  })
 }
 
-export async function apiStuck(context: string) {
-  return post<{
-    ok: boolean
-    reflection: string
-    micro_step: string
-    premium: boolean
-    aiUsage?: { groqCount: number; deepseekCount: number }
-  }>('/mini-app/focus/stuck', { context })
+export async function apiHistory(limit = 20) {
+  return post<{ ok: boolean; items: FocusHistoryItem[]; stats: InitResponse['stats'] }>(
+    '/mini-app/focus/history',
+    { limit },
+  )
 }
 
 export async function apiTranscribe(audioBase64: string, mimeType: string) {
@@ -159,26 +171,4 @@ export async function apiTranscribe(audioBase64: string, mimeType: string) {
     audioBase64,
     mimeType,
   })
-}
-
-export async function apiSessionStart(durationMin: number, taskNote: string) {
-  return post<{ ok: boolean; sessionId: number }>('/mini-app/focus/session', {
-    action: 'start',
-    durationMin,
-    taskNote,
-  })
-}
-
-export async function apiSessionFinish(sessionId: number, outcome: string) {
-  return post<{ ok: boolean; stats: { sessionsToday: number; winsTotal: number } }>(
-    '/mini-app/focus/session',
-    { action: 'finish', sessionId, outcome },
-  )
-}
-
-export async function apiToday(slots?: { morning: string; day: string; evening: string }) {
-  return post<{ ok: boolean; slots: { morning: string; day: string; evening: string } }>(
-    '/mini-app/focus/today',
-    slots ? { slots } : {},
-  )
 }

@@ -3,8 +3,8 @@ export function PremiumBanner() {
     <div className="premium-banner">
       <p className="premium-banner__title">Премиум</p>
       <p className="premium-banner__text">
-        Один тариф открывает «Путь к Себе» и здесь — <strong>более сильный ИИ</strong>, больше подсказок
-        и точнее разбор задач. Оформи в боте: «💰 Тарифы».
+        Больше подсказок ИИ в день, точнее разбор и дополнительные шаги после разморозки. Оформи в боте:
+        «💰 Тарифы».
       </p>
     </div>
   )

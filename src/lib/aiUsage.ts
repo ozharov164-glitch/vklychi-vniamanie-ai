@@ -1,12 +1,15 @@
-import type { InitResponse } from '../api'
-
-export function getAiQuota(premium: boolean, aiUsage: InitResponse['aiUsage'], limits: InitResponse['limits']) {
-  if (premium) {
-    return { used: aiUsage.deepseekCount, limit: limits.deepseekDaily, tier: 'premium' as const }
-  }
-  return { used: aiUsage.groqCount, limit: limits.groqDaily, tier: 'free' as const }
-}
-
 export function aiQuotaLabel(used: number, limit: number) {
   return `Подсказки ИИ сегодня: ${used} из ${limit}`
+}
+
+export function aiQuotaHint(premium: boolean, left: number) {
+  if (premium) {
+    return left > 0
+      ? 'В Премиум — больше подсказок и точнее разбор.'
+      : 'Лимит на сегодня. Завтра снова — или продолжай без ИИ.'
+  }
+  if (left > 0) {
+    return 'Разморозка с подсказкой ИИ. Таймер — без лимита.'
+  }
+  return 'Лимит на сегодня. Завтра снова или оформи Премиум в боте.'
 }
