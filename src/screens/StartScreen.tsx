@@ -49,6 +49,13 @@ function isClearTask(text: string): boolean {
   return verb.test(t)
 }
 
+/** Несколько болей сразу — нужен разбор, не чек-лист учёбы. */
+function isOverload(text: string): boolean {
+  return /(алкогол|зависим|предательств|разрыв|девушк|навалил|кризис|мести|вина|устал|без\s*сил|тревог|паник|выгор|не\s*могу|бросить|плач)/i.test(
+    text,
+  )
+}
+
 export function StartScreen() {
   const premium = useAppStore((s) => s.premium)
   const stats = useAppStore((s) => s.stats)
@@ -93,7 +100,8 @@ export function StartScreen() {
     setError('')
     try {
       let res
-      if (mode === 'noise') {
+      const useBrainDump = mode === 'noise' || isOverload(text)
+      if (useBrainDump) {
         res = await apiBrainDump(text)
       } else if (isClearTask(text)) {
         res = await apiTaskSteps(text, fearFromBlocker(blocker), blocker)
@@ -101,7 +109,7 @@ export function StartScreen() {
         res = await apiUnfreeze('stuck', text, blocker)
       }
       if (res.aiUsage) setAiUsage(res.aiUsage)
-      applyActionResponse(res, mode)
+      applyActionResponse(res, useBrainDump ? 'noise' : mode)
       setStep('result')
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
     } catch (e) {
@@ -204,7 +212,11 @@ export function StartScreen() {
                 disabled={loading || text.trim().length < 2}
                 onClick={() => (mode === 'stuck' ? setStep('blocker') : runAction())}
               >
-                {mode === 'noise' ? (loading ? 'Разбираю…' : 'Разложить мысли') : 'Дальше'}
+                {mode === 'noise' || isOverload(text)
+                  ? loading
+                    ? 'Разбираю навало…'
+                    : 'Разобрать навало'
+                  : 'Дальше'}
               </button>
             </>
           )}

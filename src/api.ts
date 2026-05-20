@@ -103,6 +103,9 @@ export type ActionResponse = {
   nextSteps: string[]
   steps?: string[]
   alternates?: string[]
+  userPriority?: string
+  contextLoad?: string
+  planLater?: string[]
   whyLightest?: string
   now?: string[]
   today?: string[]

@@ -8,10 +8,12 @@ export type ActiveSession = {
   sessionId: number
   mode: UnfreezeMode
   insight: string
+  userPriority: string
   whyShort: string
   microStep: string
   taskLabel: string
   nextSteps: string[]
+  planLater: string[]
   steps: string[]
   alternates: string[]
   showBuckets: boolean
@@ -69,10 +71,12 @@ export const useAppStore = create<AppState>((set) => ({
         sessionId: res.sessionId,
         mode,
         insight: res.insight || res.patternLine || '',
+        userPriority: res.userPriority || '',
         whyShort: res.whyShort || res.whyLightest || '',
         microStep: micro,
         taskLabel: res.taskLabel || 'Твой шаг',
         nextSteps: res.nextSteps || [],
+        planLater: res.planLater || res.nextSteps || [],
         steps: res.steps || [],
         alternates,
         showBuckets: mode === 'noise',

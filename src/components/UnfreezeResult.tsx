@@ -3,30 +3,27 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { apiOutcome } from '../api'
 import { useAppStore } from '../store'
 
-const PARTIAL_FALLBACK = 'Только вход в задачу: открыть файл или написать одно слово.'
-
 export function UnfreezeResult() {
   const active = useAppStore((s) => s.activeSession)
   const setActiveSession = useAppStore((s) => s.setActiveSession)
   const setStats = useAppStore((s) => s.setStats)
-  const premium = useAppStore((s) => s.premium)
 
   const [microStep, setMicroStep] = useState('')
-  const [nextQueue, setNextQueue] = useState<string[]>([])
-  const [partialUsed, setPartialUsed] = useState(false)
   const [finishing, setFinishing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [bucketsOpen, setBucketsOpen] = useState(true)
   const [whyOpen, setWhyOpen] = useState(false)
+  const [planOpen, setPlanOpen] = useState(false)
+  const [showAlternates, setShowAlternates] = useState(false)
 
   useEffect(() => {
     if (!active) return
     setMicroStep(active.microStep)
-    setNextQueue([...active.nextSteps, ...active.alternates])
-    setPartialUsed(false)
     setCopied(false)
     setBucketsOpen(active.showBuckets)
     setWhyOpen(false)
+    setPlanOpen(false)
+    setShowAlternates(false)
   }, [active?.sessionId])
 
   const bucketCount = useMemo(() => {
@@ -38,10 +35,12 @@ export function UnfreezeResult() {
   if (!active) return null
 
   const displayStep = microStep || active.microStep
+  const alternatesVisible = active.alternates.filter((a) => a !== displayStep)
+  const planItems = active.planLater.length ? active.planLater : active.steps.slice(1)
 
   function pickAlternate(alt: string) {
     setMicroStep(alt)
-    setPartialUsed(false)
+    setShowAlternates(false)
     window.Telegram?.WebApp.HapticFeedback?.selectionChanged()
   }
 
@@ -56,24 +55,11 @@ export function UnfreezeResult() {
     }
   }
 
-  async function finish(outcome: 'done' | 'partial' | 'enough') {
+  async function closeSession(outcome: 'done' | 'enough') {
     if (!active || finishing) return
-
-    if (outcome === 'partial' && !partialUsed) {
-      const q = nextQueue.length ? nextQueue : [...active.nextSteps, ...active.alternates]
-      const fallback = q.find((s) => s && s !== displayStep) || active.steps[1] || PARTIAL_FALLBACK
-      if (fallback && fallback !== displayStep) {
-        setMicroStep(fallback)
-        setNextQueue(q.filter((s) => s !== fallback))
-        setPartialUsed(true)
-        window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
-        return
-      }
-    }
-
     setFinishing(true)
     try {
-      const res = await apiOutcome(active.sessionId, outcome === 'partial' && partialUsed ? 'partial' : outcome)
+      const res = await apiOutcome(active.sessionId, outcome)
       setStats(res.stats)
       setActiveSession(null)
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
@@ -82,26 +68,25 @@ export function UnfreezeResult() {
     }
   }
 
-  const alternatesVisible = active.alternates.filter((a) => a !== displayStep)
-
   return (
     <motion.div className="unfreeze-result stack" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      {active.userPriority && <p className="priority-line">{active.userPriority}</p>}
       {active.insight && <p className="insight-line">{active.insight}</p>}
 
       <div className="unfreeze-card unfreeze-card--hero">
+        <p className="unfreeze-card__eyebrow">Опора сейчас</p>
         {active.taskLabel && active.taskLabel !== displayStep && (
           <p className="unfreeze-card__label">{active.taskLabel}</p>
         )}
         <p className="unfreeze-card__step">{displayStep}</p>
-        {partialUsed && <p className="unfreeze-card__partial-hint">Ещё меньше — попробуй этот вариант</p>}
         {active.whyShort && (
           <button type="button" className="why-toggle" onClick={() => setWhyOpen((o) => !o)}>
-            {whyOpen ? '▲ Скрыть' : '▼ Почему этот шаг?'}
+            {whyOpen ? '▲ Скрыть' : '▼ Зачем именно это'}
           </button>
         )}
         {whyOpen && active.whyShort && <p className="unfreeze-card__reflection">{active.whyShort}</p>}
         <button type="button" className="btn-copy" onClick={copyStep}>
-          {copied ? 'Скопировано ✓' : 'Скопировать шаг'}
+          {copied ? 'Скопировано ✓' : 'Скопировать опору'}
         </button>
       </div>
 
@@ -115,7 +100,8 @@ export function UnfreezeResult() {
           >
             <span className="brain-buckets__chevron">{bucketsOpen ? '▼' : '▶'}</span>
             <span>
-              Разложили <strong>{bucketCount}</strong> {bucketCount === 1 ? 'мысль' : bucketCount < 5 ? 'мысли' : 'мыслей'}
+              Разбор: <strong>{bucketCount}</strong>{' '}
+              {bucketCount === 1 ? 'пункт' : bucketCount < 5 ? 'пункта' : 'пунктов'}
             </span>
           </button>
           <AnimatePresence initial={false}>
@@ -127,10 +113,10 @@ export function UnfreezeResult() {
                 exit={{ opacity: 0, height: 0 }}
               >
                 {active.buckets.release.length > 0 && (
-                  <Bucket title="Можно отпустить" items={active.buckets.release} accent />
+                  <Bucket title="Отпустить — не твоя работа сейчас" items={active.buckets.release} accent />
                 )}
-                <Bucket title="Сейчас" items={active.buckets.now} />
-                <Bucket title="Сегодня" items={active.buckets.today} />
+                <Bucket title="Опора сейчас" items={active.buckets.now} />
+                <Bucket title="Границы на сегодня" items={active.buckets.today} />
                 <Bucket title="Потом" items={active.buckets.later} />
               </motion.div>
             )}
@@ -138,40 +124,53 @@ export function UnfreezeResult() {
         </div>
       )}
 
-      {alternatesVisible.length > 0 && (
-        <div className="alt-steps">
-          <p className="section-label">Не то? Другой шаг из разбора</p>
-          <div className="alt-steps__chips">
-            {alternatesVisible.map((alt) => (
-              <button key={alt} type="button" className="alt-chip" onClick={() => pickAlternate(alt)}>
-                {alt}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="close-panel">
+        <p className="close-panel__title">Что дальше?</p>
+        <p className="close-panel__hint">Не оценка. Ты решаешь, зачем тебе этот разбор.</p>
 
-      <div className="outcome-panel">
-        <p className="outcome-panel__hint">Любой ответ — победа. Без оценки.</p>
-        <button type="button" className="btn-primary" disabled={finishing} onClick={() => finish('done')}>
-          Сделал(а) ✓
+        <button type="button" className="btn-primary" disabled={finishing} onClick={() => closeSession('done')}>
+          Сдвинулось — сохранить
         </button>
-        <button type="button" className="btn-secondary" disabled={finishing} onClick={() => finish('partial')}>
-          {partialUsed ? 'Частично — зафиксировать' : 'Частично — ещё меньше'}
-        </button>
-        <button type="button" className="btn-secondary" disabled={finishing} onClick={() => finish('enough')}>
-          Достаточно на сегодня
+
+        {alternatesVisible.length > 0 && (
+          <>
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={finishing}
+              onClick={() => setShowAlternates((v) => !v)}
+            >
+              {showAlternates ? 'Скрыть другие опоры' : 'Нужна другая опора'}
+            </button>
+            {showAlternates && (
+              <div className="alt-steps alt-steps--inline">
+                {alternatesVisible.map((alt) => (
+                  <button key={alt} type="button" className="alt-chip" onClick={() => pickAlternate(alt)}>
+                    {alt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        <button type="button" className="btn-ghost" disabled={finishing} onClick={() => closeSession('enough')}>
+          Сохранить разбор и выйти
         </button>
       </div>
 
-      {premium && active.steps.length > 1 && !active.showBuckets && (
-        <div className="next-steps">
-          <p className="section-label">Дальше по плану</p>
-          <ul className="next-steps__list">
-            {active.steps.slice(1).map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
+      {planItems.length > 0 && (
+        <div className="plan-later">
+          <button type="button" className="plan-later__toggle" onClick={() => setPlanOpen((o) => !o)}>
+            {planOpen ? '▲' : '▼'} Когда будешь готов(а) — не сейчас
+          </button>
+          {planOpen && (
+            <ul className="plan-later__list">
+              {planItems.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </motion.div>
