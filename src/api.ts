@@ -102,7 +102,8 @@ export type ThemeChoice = {
 export type InitResponse = {
   app_save_token: string
   isPremium: boolean
-  aiUsage: { aiUsedToday: number; hintsLimit: number }
+  ownerUnlimited?: boolean
+  aiUsage: { aiUsedToday: number; hintsLimit: number; ownerUnlimited?: boolean }
   stats: { sessionsToday: number; winsTotal: number; streakDays: number }
   memory?: FocusMemoryItem[]
 }
@@ -135,7 +136,7 @@ export type ActionResponse = {
   themeChoices?: ThemeChoice[]
   powerLine?: string
   powerAuthor?: string
-  aiUsage?: { aiUsedToday: number; hintsLimit: number }
+  aiUsage?: { aiUsedToday: number; hintsLimit: number; ownerUnlimited?: boolean }
   cached?: boolean
   regenerated?: boolean
 }

@@ -34,7 +34,8 @@ export type ActiveSession = {
 type AppState = {
   ready: boolean
   premium: boolean
-  aiUsage: { aiUsedToday: number; hintsLimit: number }
+  ownerUnlimited: boolean
+  aiUsage: { aiUsedToday: number; hintsLimit: number; ownerUnlimited?: boolean }
   stats: { sessionsToday: number; winsTotal: number; streakDays: number }
   memory: FocusMemoryItem[]
   tab: TabId
@@ -44,7 +45,7 @@ type AppState = {
   applyInit: (d: InitResponse) => void
   setBootComplete: () => void
   setStats: (s: InitResponse['stats']) => void
-  setAiUsage: (u: { aiUsedToday: number; hintsLimit: number }) => void
+  setAiUsage: (u: { aiUsedToday: number; hintsLimit: number; ownerUnlimited?: boolean }) => void
   setHistory: (items: FocusHistoryItem[]) => void
   setActiveSession: (u: ActiveSession | null) => void
   setMicroStep: (microStep: string) => void
@@ -54,6 +55,7 @@ type AppState = {
 export const useAppStore = create<AppState>((set) => ({
   ready: false,
   premium: false,
+  ownerUnlimited: false,
   aiUsage: { aiUsedToday: 0, hintsLimit: 6 },
   stats: { sessionsToday: 0, winsTotal: 0, streakDays: 0 },
   memory: [],
@@ -64,6 +66,7 @@ export const useAppStore = create<AppState>((set) => ({
   applyInit: (d) =>
     set({
       premium: d.isPremium,
+      ownerUnlimited: Boolean(d.ownerUnlimited || d.aiUsage?.ownerUnlimited),
       aiUsage: d.aiUsage,
       stats: d.stats,
       memory: d.memory || [],
