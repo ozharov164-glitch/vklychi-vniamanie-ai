@@ -5,6 +5,7 @@ const STEPS: { n: string; title: string; hint: string; tab: TabId }[] = [
   { n: '1', title: 'Сброс', hint: 'Выложи мысли — ИИ разложит', tab: 'dump' },
   { n: '2', title: 'Шаги', hint: 'Одна задача → микро-действия', tab: 'steps' },
   { n: '3', title: 'Рядом', hint: 'Таймер без давления', tab: 'focus' },
+  { n: '4', title: 'День', hint: 'Три якоря на сутки', tab: 'today' },
 ]
 
 export function HowItWorks() {
@@ -13,8 +14,8 @@ export function HowItWorks() {
 
   return (
     <section className="how-it-works" aria-label="Как пользоваться">
-      <p className="section-label">За 30 секунд</p>
-      <div className="how-it-works__row">
+      <p className="section-label">Маршрут за 30 секунд</p>
+      <div className="how-it-works__row how-it-works__row--4">
         {STEPS.map((s, i) => (
           <motion.button
             key={s.tab}
@@ -23,7 +24,7 @@ export function HowItWorks() {
             onClick={() => setTab(s.tab)}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
+            transition={{ delay: i * 0.05 }}
             whileTap={{ scale: 0.97 }}
           >
             <span className="how-step__n">{s.n}</span>

@@ -14,6 +14,7 @@ type AppState = {
   applyInit: (d: InitResponse) => void
   setBootComplete: () => void
   setStats: (s: { sessionsToday: number; winsTotal: number }) => void
+  setAiUsage: (u: { groqCount: number; deepseekCount: number }) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -33,4 +34,5 @@ export const useAppStore = create<AppState>((set) => ({
     }),
   setBootComplete: () => set({ ready: true }),
   setStats: (stats) => set({ stats }),
+  setAiUsage: (aiUsage) => set({ aiUsage }),
 }))

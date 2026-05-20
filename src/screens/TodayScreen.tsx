@@ -3,22 +3,37 @@ import { motion } from 'framer-motion'
 import { apiToday } from '../api'
 import { images } from '../lib/assets'
 import { ScreenHero } from '../components/ScreenHero'
+import { ContextTip } from '../components/ContextTip'
+import { VoiceTextField } from '../components/VoiceTextField'
+import { SECTION_TIPS } from '../lib/sectionTips'
 
 export function TodayScreen() {
   const [slots, setSlots] = useState({ morning: '', day: '', evening: '' })
   const [saved, setSaved] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     apiToday()
       .then((r) => setSlots(r.slots))
-      .catch(() => {})
+      .catch(() => setError('Не удалось загрузить якоря'))
+      .finally(() => setLoading(false))
   }, [])
 
   async function save() {
-    await apiToday(slots)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-    window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('success')
+    setSaving(true)
+    setError('')
+    try {
+      await apiToday(slots)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('success')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось сохранить')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const field = (key: keyof typeof slots, label: string, placeholder: string, hint: string) => (
@@ -29,12 +44,12 @@ export function TodayScreen() {
         </label>
         <span className="slot-field__hint">{hint}</span>
       </div>
-      <input
+      <VoiceTextField
         id={`slot-${key}`}
-        className="input-field"
         placeholder={placeholder}
         value={slots[key]}
-        onChange={(e) => setSlots({ ...slots, [key]: e.target.value })}
+        onChange={(v) => setSlots({ ...slots, [key]: v })}
+        disabled={loading || saving}
       />
     </div>
   )
@@ -49,11 +64,21 @@ export function TodayScreen() {
         subtitle="Три опоры — не список на сорок пунктов. Заполни за минуту."
         compact
       />
-      {field('morning', 'Утро', 'Одно главное на утро', 'с чего начать')}
-      {field('day', 'День', 'Один фокус днём', 'середина')}
-      {field('evening', 'Вечер', 'Мягкое завершение', 'закрыть день')}
-      <button type="button" className="btn-primary" onClick={save}>
-        {saved ? 'Сохранено ✓' : 'Сохранить якоря'}
+      <ContextTip id="today" text={SECTION_TIPS.today} />
+
+      {loading ? (
+        <p className="hint-line">Загружаю якоря…</p>
+      ) : (
+        <>
+          {field('morning', 'Утро', 'Одно главное на утро', 'с чего начать')}
+          {field('day', 'День', 'Один фокус днём', 'середина')}
+          {field('evening', 'Вечер', 'Мягкое завершение', 'закрыть день')}
+        </>
+      )}
+
+      {error && <p className="form-error">{error}</p>}
+      <button type="button" className="btn-primary" onClick={save} disabled={loading || saving}>
+        {saved ? 'Сохранено ✓' : saving ? 'Сохраняю…' : 'Сохранить якоря'}
       </button>
     </motion.div>
   )

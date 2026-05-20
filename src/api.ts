@@ -130,21 +130,35 @@ export async function apiBrainDump(text: string) {
     later: string[]
     release: string[]
     lightest: string
+    aiUsage?: { groqCount: number; deepseekCount: number }
   }>('/mini-app/focus/brain-dump', { text })
 }
 
 export async function apiSteps(task: string, fearLevel: number) {
-  return post<{ ok: boolean; steps: string[]; first_micro: string; cached?: boolean }>(
-    '/mini-app/focus/steps',
-    { task, fearLevel },
-  )
+  return post<{
+    ok: boolean
+    steps: string[]
+    first_micro: string
+    cached?: boolean
+    aiUsage?: { groqCount: number; deepseekCount: number }
+  }>('/mini-app/focus/steps', { task, fearLevel })
 }
 
 export async function apiStuck(context: string) {
-  return post<{ ok: boolean; reflection: string; micro_step: string; premium: boolean }>(
-    '/mini-app/focus/stuck',
-    { context },
-  )
+  return post<{
+    ok: boolean
+    reflection: string
+    micro_step: string
+    premium: boolean
+    aiUsage?: { groqCount: number; deepseekCount: number }
+  }>('/mini-app/focus/stuck', { context })
+}
+
+export async function apiTranscribe(audioBase64: string, mimeType: string) {
+  return post<{ ok: boolean; text: string }>('/mini-app/focus/transcribe', {
+    audioBase64,
+    mimeType,
+  })
 }
 
 export async function apiSessionStart(durationMin: number, taskNote: string) {

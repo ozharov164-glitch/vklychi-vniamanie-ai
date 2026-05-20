@@ -5,6 +5,8 @@ import { ScreenHero } from '../components/ScreenHero'
 import { HowItWorks } from '../components/HowItWorks'
 import { AiStatusLine } from '../components/AiStatusLine'
 import { PremiumBanner } from '../components/PremiumBanner'
+import { ContextTip } from '../components/ContextTip'
+import { SECTION_TIPS } from '../lib/sectionTips'
 
 export function HomeScreen() {
   const premium = useAppStore((s) => s.premium)
@@ -18,8 +20,9 @@ export function HomeScreen() {
         alt=""
         eyebrow="ВключиСебя"
         title="ВключиВнимание"
-        subtitle="Внешний мозг для старта — без стыда и без давления. Три шага ниже."
+        subtitle="Внешний мозг для старта — без стыда и без давления."
       />
+      <ContextTip id="home" text={SECTION_TIPS.home} autoHideMs={10000} />
 
       <div className="stat-grid">
         <div className="stat-card">
@@ -37,11 +40,14 @@ export function HomeScreen() {
       {!premium && <PremiumBanner />}
 
       <div className="cta-stack">
-        <button type="button" className="btn-primary btn-primary--glow" onClick={() => setTab('focus')}>
+        <button type="button" className="btn-primary btn-primary--glow" onClick={() => setTab('dump')}>
+          Сбросить голову
+        </button>
+        <button type="button" className="btn-secondary" onClick={() => setTab('focus')}>
           Начать «Рядом» — таймер
         </button>
-        <button type="button" className="btn-secondary" onClick={() => setTab('dump')}>
-          Сбросить голову
+        <button type="button" className="btn-secondary btn-secondary--ghost" onClick={() => setTab('today')}>
+          Якоря дня
         </button>
       </div>
 

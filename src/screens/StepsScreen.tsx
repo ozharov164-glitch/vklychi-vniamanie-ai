@@ -4,15 +4,20 @@ import { apiSteps, apiStuck } from '../api'
 import { useAppStore } from '../store'
 import { images } from '../lib/assets'
 import { ScreenHero } from '../components/ScreenHero'
+import { ContextTip } from '../components/ContextTip'
+import { VoiceTextField } from '../components/VoiceTextField'
+import { SECTION_TIPS } from '../lib/sectionTips'
 
 const FEAR_LABELS = ['', 'легко', 'терпимо', 'напряжно', 'страшно', 'парализует']
 
 export function StepsScreen() {
   const premium = useAppStore((s) => s.premium)
   const setTab = useAppStore((s) => s.setTab)
+  const setAiUsage = useAppStore((s) => s.setAiUsage)
   const [task, setTask] = useState('')
   const [fear, setFear] = useState(3)
   const [steps, setSteps] = useState<string[]>([])
+  const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set())
   const [micro, setMicro] = useState('')
   const [loading, setLoading] = useState(false)
   const [stuckLoading, setStuckLoading] = useState(false)
@@ -23,10 +28,12 @@ export function StepsScreen() {
     setError('')
     setLoading(true)
     setStuck(null)
+    setDoneSteps(new Set())
     try {
       const r = await apiSteps(task, fear)
       setSteps(r.steps)
       setMicro(r.first_micro)
+      if (r.aiUsage) setAiUsage(r.aiUsage)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
     } finally {
@@ -36,14 +43,26 @@ export function StepsScreen() {
 
   async function onStuck() {
     setStuckLoading(true)
+    setError('')
     try {
       const r = await apiStuck(task || 'не могу начать')
       setStuck({ reflection: r.reflection, micro_step: r.micro_step })
+      if (r.aiUsage) setAiUsage(r.aiUsage)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
     } finally {
       setStuckLoading(false)
     }
+  }
+
+  function toggleStep(i: number) {
+    setDoneSteps((prev) => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+    window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
   }
 
   return (
@@ -56,22 +75,25 @@ export function StepsScreen() {
         subtitle="Одна задача → маленькие действия. Чем страшнее — тем мельче шаги."
         compact
       />
+      <ContextTip id="steps" text={SECTION_TIPS.steps} />
 
       <label className="field-label" htmlFor="task-input">
         Что нужно сделать?
       </label>
-      <input
+      <VoiceTextField
         id="task-input"
-        className="input-field"
         placeholder="Например: написать отчёт"
         value={task}
-        onChange={(e) => setTask(e.target.value)}
+        onChange={setTask}
+        disabled={loading || stuckLoading}
       />
 
       <div className="fear-block">
         <div className="fear-block__head">
           <p className="field-label">Насколько страшно?</p>
-          <span className="fear-block__value">{fear}/5 · {FEAR_LABELS[fear]}</span>
+          <span className="fear-block__value">
+            {fear}/5 · {FEAR_LABELS[fear]}
+          </span>
         </div>
         <input
           type="range"
@@ -82,6 +104,9 @@ export function StepsScreen() {
           className="fear-slider"
           aria-label="Уровень страха"
         />
+        <p className="hint-line fear-block__hint">
+          {fear >= 4 ? 'Высокий страх — ИИ предложит микро-шаг на 2 минуты первым.' : 'Средний уровень — обычные конкретные шаги.'}
+        </p>
       </div>
 
       {error && <p className="form-error">{error}</p>}
@@ -94,23 +119,28 @@ export function StepsScreen() {
       </button>
 
       {stuck && (
-        <div className="highlight-card">
+        <motion.div className="highlight-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <p className="highlight-card__text">{stuck.reflection}</p>
           <p className="highlight-card__accent">{stuck.micro_step}</p>
           <button type="button" className="btn-primary btn-primary--compact" onClick={() => setTab('focus')}>
             2 минуты «Рядом»
           </button>
-        </div>
+        </motion.div>
       )}
 
       {steps.length > 0 && (
         <ol className="steps-list">
-          {steps.map((s, i) => (
-            <li key={i}>
-              <span className="steps-list__n">{i + 1}</span>
-              <span>{s}</span>
-            </li>
-          ))}
+          {steps.map((s, i) => {
+            const done = doneSteps.has(i)
+            return (
+              <li key={i} className={done ? 'steps-list__item--done' : ''}>
+                <button type="button" className="steps-list__check" onClick={() => toggleStep(i)} aria-label={done ? 'Снять отметку' : 'Отметить выполненным'}>
+                  {done ? '✓' : i + 1}
+                </button>
+                <span className={done ? 'steps-list__text--done' : ''}>{s}</span>
+              </li>
+            )
+          })}
         </ol>
       )}
 
@@ -118,8 +148,13 @@ export function StepsScreen() {
         <div className="highlight-card">
           <p className="highlight-card__label">Первый микро-шаг</p>
           <p className="highlight-card__text">{micro}</p>
+          <div className="result-actions">
+            <button type="button" className="btn-primary btn-primary--compact" onClick={() => setTab('focus')}>
+              Начать «Рядом»
+            </button>
+          </div>
           {!premium && (
-            <p className="hint-line">В Премиум — больше шагов и точнее формулировки (ИИ сильнее).</p>
+            <p className="hint-line">В Премиум — до 6 шагов и более точные формулировки.</p>
           )}
         </div>
       )}
