@@ -1,82 +1,108 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { apiUnfreeze } from '../api'
+import { apiBrainDump, apiTaskSteps, apiUnfreeze, type BlockerId } from '../api'
 import { useAppStore, type UnfreezeMode } from '../store'
 import { AiStatusLine } from '../components/AiStatusLine'
 import { PremiumBanner } from '../components/PremiumBanner'
 import { VoiceTextField } from '../components/VoiceTextField'
-import { UnfreezeTimer } from '../components/UnfreezeTimer'
+import { UnfreezeResult } from '../components/UnfreezeResult'
 import { ModeIcon } from '../components/TabIcons'
 import { images } from '../lib/assets'
 
-type Step = 'pick' | 'input' | 'timer'
+type Step = 'pick' | 'input' | 'blocker' | 'result'
 
-const MODE_COPY: Record<UnfreezeMode, { title: string; hint: string; placeholder: string }> = {
+const MODE_COPY: Record<UnfreezeMode, { title: string; hint: string; placeholder: string; cardDesc: string }> = {
   stuck: {
     title: 'Застрял(а)',
-    hint: 'Опиши задачу или что мешает начать — одной фразой.',
+    hint: 'Назови задачу — получишь первый шаг без лекций.',
     placeholder: 'Например: не могу открыть отчёт',
+    cardDesc: 'Знаю задачу — нужен первый шаг',
   },
   noise: {
     title: 'Шум в голове',
-    hint: 'Выгрузи мысли — можно коротко или голосом. ИИ выберет один лёгкий шаг.',
-    placeholder: 'Всё крутится в голове: работа, дом, сообщения…',
+    hint: 'Выложи всё из головы — останется одно лёгкое.',
+    placeholder: 'Всё крутится: работа, дом, сообщения…',
+    cardDesc: 'Много мыслей — разложим и выберем одно',
   },
+}
+
+const BLOCKERS: { id: BlockerId; label: string }[] = [
+  { id: 'fear', label: 'Страшно / тяжело' },
+  { id: 'fog', label: 'Неясно с чего' },
+  { id: 'low_energy', label: 'Мало сил' },
+  { id: 'perfection', label: 'Застрял на идеале' },
+]
+
+function fearFromBlocker(blocker: BlockerId): number {
+  if (blocker === 'fear') return 5
+  if (blocker === 'perfection') return 4
+  if (blocker === 'fog') return 3
+  if (blocker === 'low_energy') return 2
+  return 3
+}
+
+function isClearTask(text: string): boolean {
+  const t = text.trim()
+  if (t.length < 10) return false
+  const verb =
+    /(написать|сделать|открыть|отправить|позвонить|убрать|начать|закончить|подготовить|собрать|оплатить|купить|прочитать|ответить|создать|заполнить|найти|скачать|загрузить|проверить|набрать|вызвать|записать|вынести|помыть|приготовить)/i
+  return verb.test(t)
 }
 
 export function StartScreen() {
   const premium = useAppStore((s) => s.premium)
   const stats = useAppStore((s) => s.stats)
-  const activeUnfreeze = useAppStore((s) => s.activeUnfreeze)
-  const setActiveUnfreeze = useAppStore((s) => s.setActiveUnfreeze)
+  const activeSession = useAppStore((s) => s.activeSession)
+  const applyActionResponse = useAppStore((s) => s.applyActionResponse)
   const setAiUsage = useAppStore((s) => s.setAiUsage)
 
-  const [step, setStep] = useState<Step>(activeUnfreeze ? 'timer' : 'pick')
-  const [mode, setMode] = useState<UnfreezeMode | null>(null)
+  const [step, setStep] = useState<Step>(activeSession ? 'result' : 'pick')
+  const [mode, setMode] = useState<UnfreezeMode | null>(activeSession?.mode ?? null)
   const [text, setText] = useState('')
+  const [blocker, setBlocker] = useState<BlockerId>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!activeUnfreeze && step === 'timer') {
+    if (!activeSession && step === 'result') {
       setStep('pick')
       setMode(null)
       setText('')
+      setBlocker('')
     }
-  }, [activeUnfreeze, step])
+  }, [activeSession, step])
 
-  if (activeUnfreeze || step === 'timer') {
+  if (activeSession || step === 'result') {
     return (
       <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <header className="start-hero start-hero--compact">
           <img src={images.hero} alt="" className="start-hero__logo" width={384} height={384} decoding="async" />
           <div>
-            <p className="start-hero__eyebrow">90 секунд</p>
-            <h1 className="start-hero__title">Разморозка</h1>
+            <p className="start-hero__eyebrow">ВключиВнимание</p>
+            <h1 className="start-hero__title">Твой шаг</h1>
           </div>
         </header>
-        <UnfreezeTimer />
+        <UnfreezeResult />
       </motion.div>
     )
   }
 
-  async function runUnfreeze() {
+  async function runAction() {
     if (!mode) return
     setLoading(true)
     setError('')
     try {
-      const res = await apiUnfreeze(mode, text)
+      let res
+      if (mode === 'noise') {
+        res = await apiBrainDump(text)
+      } else if (isClearTask(text)) {
+        res = await apiTaskSteps(text, fearFromBlocker(blocker), blocker)
+      } else {
+        res = await apiUnfreeze('stuck', text, blocker)
+      }
       if (res.aiUsage) setAiUsage(res.aiUsage)
-      setActiveUnfreeze({
-        sessionId: res.sessionId,
-        mode,
-        reflection: res.reflection,
-        microStep: res.microStep,
-        taskLabel: res.taskLabel,
-        nextSteps: res.nextSteps || [],
-        durationSec: res.durationSec || 90,
-      })
-      setStep('timer')
+      applyActionResponse(res, mode)
+      setStep('result')
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
     } catch (e) {
       const err = e as Error & { limitReached?: boolean }
@@ -86,21 +112,29 @@ export function StartScreen() {
     }
   }
 
+  function resetToPick() {
+    setStep('pick')
+    setMode(null)
+    setText('')
+    setBlocker('')
+    setError('')
+  }
+
   return (
     <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <header className="start-hero">
         <img src={images.hero} alt="" className="start-hero__logo" width={384} height={384} decoding="async" />
         <div>
           <p className="start-hero__eyebrow">ВключиВнимание</p>
-          <h1 className="start-hero__title">Разморозка за 90 секунд</h1>
-          <p className="start-hero__subtitle">Один шаг вместо бесконечного «надо бы». Без стыда и давления.</p>
+          <h1 className="start-hero__title">Один шаг вместо «надо бы»</h1>
+          <p className="start-hero__subtitle">Без стыда и давления. Два режима — под разную блокировку.</p>
         </div>
       </header>
 
       <div className="stat-grid">
         <div className="stat-card">
           <p className="stat-card__value">{stats.sessionsToday}</p>
-          <p className="stat-card__label">разморозок сегодня</p>
+          <p className="stat-card__label">шагов сегодня</p>
         </div>
         <div className="stat-card">
           <p className="stat-card__value stat-card__value--muted">{stats.winsTotal}</p>
@@ -122,7 +156,7 @@ export function StartScreen() {
             >
               <ModeIcon mode="stuck" />
               <span className="mode-card__title">Застрял(а)</span>
-              <span className="mode-card__desc">Знаю задачу, но не могу начать</span>
+              <span className="mode-card__desc">{MODE_COPY.stuck.cardDesc}</span>
             </button>
             <button
               type="button"
@@ -134,15 +168,15 @@ export function StartScreen() {
             >
               <ModeIcon mode="noise" />
               <span className="mode-card__title">Шум в голове</span>
-              <span className="mode-card__desc">Много мыслей, не знаю с чего</span>
+              <span className="mode-card__desc">{MODE_COPY.noise.cardDesc}</span>
             </button>
           </div>
         </>
       )}
 
-      {step === 'input' && mode && (
+      {(step === 'input' || step === 'blocker') && mode && (
         <>
-          <button type="button" className="link-back" onClick={() => setStep('pick')}>
+          <button type="button" className="link-back" onClick={step === 'blocker' ? () => setStep('input') : resetToPick}>
             ← Назад
           </button>
           <div className="mode-input-head">
@@ -152,24 +186,56 @@ export function StartScreen() {
               <p className="hint-line hint-line--tight">{MODE_COPY[mode].hint}</p>
             </div>
           </div>
-          <VoiceTextField
-            id="unfreeze-text"
-            multiline
-            rows={4}
-            placeholder={MODE_COPY[mode].placeholder}
-            value={text}
-            onChange={setText}
-            disabled={loading}
-          />
+
+          {step === 'input' && (
+            <>
+              <VoiceTextField
+                id="focus-input"
+                multiline
+                rows={4}
+                placeholder={MODE_COPY[mode].placeholder}
+                value={text}
+                onChange={setText}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="btn-primary btn-primary--glow"
+                disabled={loading || text.trim().length < 2}
+                onClick={() => (mode === 'stuck' ? setStep('blocker') : runAction())}
+              >
+                {mode === 'noise' ? (loading ? 'Разбираю…' : 'Разложить мысли') : 'Дальше'}
+              </button>
+            </>
+          )}
+
+          {step === 'blocker' && mode === 'stuck' && (
+            <>
+              <p className="section-label">Что ближе?</p>
+              <div className="blocker-chips">
+                {BLOCKERS.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    className={`blocker-chip${blocker === b.id ? ' blocker-chip--on' : ''}`}
+                    onClick={() => setBlocker(blocker === b.id ? '' : b.id)}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="btn-primary btn-primary--glow"
+                disabled={loading}
+                onClick={runAction}
+              >
+                {loading ? 'Подбираю шаг…' : 'Получить первый шаг'}
+              </button>
+            </>
+          )}
+
           {error && <p className="field-error">{error}</p>}
-          <button
-            type="button"
-            className="btn-primary btn-primary--glow"
-            disabled={loading}
-            onClick={runUnfreeze}
-          >
-            {loading ? 'Подбираю шаг…' : 'Разморозить'}
-          </button>
         </>
       )}
 

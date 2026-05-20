@@ -1,17 +1,26 @@
 import { create } from 'zustand'
-import type { FocusHistoryItem, InitResponse } from './api'
+import type { ActionResponse, FocusHistoryItem, InitResponse } from './api'
 
 export type TabId = 'start' | 'wins'
 export type UnfreezeMode = 'stuck' | 'noise'
 
-export type ActiveUnfreeze = {
+export type ActiveSession = {
   sessionId: number
   mode: UnfreezeMode
   reflection: string
+  patternLine: string
   microStep: string
   taskLabel: string
   nextSteps: string[]
-  durationSec: number
+  steps: string[]
+  whyLightest: string
+  showBuckets: boolean
+  buckets: {
+    now: string[]
+    today: string[]
+    later: string[]
+    release: string[]
+  }
 }
 
 type AppState = {
@@ -21,14 +30,15 @@ type AppState = {
   stats: { sessionsToday: number; winsTotal: number; streakDays: number }
   tab: TabId
   history: FocusHistoryItem[]
-  activeUnfreeze: ActiveUnfreeze | null
+  activeSession: ActiveSession | null
   setTab: (t: TabId) => void
   applyInit: (d: InitResponse) => void
   setBootComplete: () => void
   setStats: (s: InitResponse['stats']) => void
   setAiUsage: (u: { aiUsedToday: number; hintsLimit: number }) => void
   setHistory: (items: FocusHistoryItem[]) => void
-  setActiveUnfreeze: (u: ActiveUnfreeze | null) => void
+  setActiveSession: (u: ActiveSession | null) => void
+  applyActionResponse: (res: ActionResponse, mode: UnfreezeMode) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -38,7 +48,7 @@ export const useAppStore = create<AppState>((set) => ({
   stats: { sessionsToday: 0, winsTotal: 0, streakDays: 0 },
   tab: 'start',
   history: [],
-  activeUnfreeze: null,
+  activeSession: null,
   setTab: (tab) => set({ tab }),
   applyInit: (d) =>
     set({
@@ -50,5 +60,26 @@ export const useAppStore = create<AppState>((set) => ({
   setStats: (stats) => set({ stats }),
   setAiUsage: (aiUsage) => set({ aiUsage }),
   setHistory: (history) => set({ history }),
-  setActiveUnfreeze: (activeUnfreeze) => set({ activeUnfreeze }),
+  setActiveSession: (activeSession) => set({ activeSession }),
+  applyActionResponse: (res, mode) =>
+    set({
+      activeSession: {
+        sessionId: res.sessionId,
+        mode,
+        reflection: res.reflection || res.whyLightest || '',
+        patternLine: res.patternLine || '',
+        microStep: res.microStep || res.lightest || '',
+        taskLabel: res.taskLabel || '',
+        nextSteps: res.nextSteps || [],
+        steps: res.steps || [],
+        whyLightest: res.whyLightest || '',
+        showBuckets: mode === 'noise',
+        buckets: {
+          now: res.now || [],
+          today: res.today || [],
+          later: res.later || [],
+          release: res.release || [],
+        },
+      },
+    }),
 }))

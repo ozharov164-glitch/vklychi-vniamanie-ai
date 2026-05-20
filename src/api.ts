@@ -70,6 +70,8 @@ async function post<T>(path: string, body: Record<string, unknown>): Promise<T> 
   return postRaw<T>(path, authBody(body))
 }
 
+export type BlockerId = 'fear' | 'fog' | 'perfection' | 'low_energy' | ''
+
 export type FocusHistoryItem = {
   id: number
   mode: string
@@ -88,16 +90,25 @@ export type InitResponse = {
   stats: { sessionsToday: number; winsTotal: number; streakDays: number }
 }
 
-export type UnfreezeResponse = {
+export type ActionResponse = {
   ok: boolean
   sessionId: number
   mode: string
+  blocker?: string
+  patternLine?: string
   reflection: string
   microStep: string
   taskLabel: string
   nextSteps: string[]
-  durationSec: number
+  steps?: string[]
+  whyLightest?: string
+  now?: string[]
+  today?: string[]
+  later?: string[]
+  release?: string[]
+  lightest?: string
   aiUsage?: { aiUsedToday: number; hintsLimit: number }
+  cached?: boolean
 }
 
 async function postFocusInit(body: Record<string, unknown>): Promise<InitResponse> {
@@ -148,8 +159,20 @@ export async function apiInit(): Promise<InitResponse> {
   throw new Error('Не удалось войти. Закрой приложение и открой снова кнопкой в боте.')
 }
 
-export async function apiUnfreeze(mode: 'stuck' | 'noise', text: string) {
-  return post<UnfreezeResponse>('/mini-app/focus/unfreeze', { mode, text })
+export async function apiUnfreeze(mode: 'stuck' | 'noise', text: string, blocker: BlockerId = '') {
+  return post<ActionResponse>('/mini-app/focus/unfreeze', { mode, text, blocker: blocker || undefined })
+}
+
+export async function apiBrainDump(text: string) {
+  return post<ActionResponse>('/mini-app/focus/brain-dump', { text })
+}
+
+export async function apiTaskSteps(task: string, fearLevel: number, blocker: BlockerId = '') {
+  return post<ActionResponse>('/mini-app/focus/steps', {
+    task,
+    fearLevel,
+    blocker: blocker || undefined,
+  })
 }
 
 export async function apiOutcome(sessionId: number, outcome: 'done' | 'partial' | 'enough') {

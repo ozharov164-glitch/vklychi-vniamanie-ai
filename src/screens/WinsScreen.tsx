@@ -56,14 +56,16 @@ export function WinsScreen() {
     }
   }, [setHistory, setStats])
 
-  const completed = history.filter((h) => h.outcome)
+  const completed = history.filter(
+    (h) => h.outcome && ['done', 'partial', 'enough'].includes(h.outcome),
+  )
 
   return (
     <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <header className="wins-header">
         <p className="start-hero__eyebrow">Твои шаги</p>
         <h1 className="start-hero__title">Победы</h1>
-        <p className="start-hero__subtitle">Каждая разморозка — уже движение. Даже «частично».</p>
+        <p className="start-hero__subtitle">Твои рабочие шаги. Даже «частично» — уже движение.</p>
       </header>
 
       <div className="stat-grid stat-grid--3">
@@ -87,7 +89,7 @@ export function WinsScreen() {
       {!loading && completed.length === 0 && (
         <div className="empty-wins">
           <p>Пока пусто — и это нормально.</p>
-          <p className="hint-line">Сделай первую разморозку на вкладке «Разморозка».</p>
+          <p className="hint-line">Сделай первый шаг на вкладке «Старт».</p>
         </div>
       )}
 

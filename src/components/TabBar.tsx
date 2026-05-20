@@ -2,7 +2,7 @@ import { useAppStore, type TabId } from '../store'
 import { TabIcon } from './TabIcons'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'start', label: 'Разморозка' },
+  { id: 'start', label: 'Старт' },
   { id: 'wins', label: 'Победы' },
 ]
 
