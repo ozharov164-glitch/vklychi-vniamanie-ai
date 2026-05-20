@@ -140,12 +140,16 @@ export function StartScreen() {
         </div>
       </header>
 
-      {memory.length > 0 && memory[0].helpWorked && (
-        <div className="memory-hint">
-          <p className="memory-hint__label">В прошлый раз помогло</p>
-          <p className="memory-hint__text">{memory[0].helpWorked}</p>
-        </div>
-      )}
+      {(() => {
+        const tip = memory.find((m) => m.helpWorked?.trim())
+        if (!tip?.helpWorked) return null
+        return (
+          <div className="memory-hint">
+            <p className="memory-hint__label">В прошлый раз помогло</p>
+            <p className="memory-hint__text">{tip.helpWorked}</p>
+          </div>
+        )
+      })()}
 
       <div className="stat-grid">
         <div className="stat-card">
