@@ -92,8 +92,9 @@ def remove_background(src: Path, dst: Path, *, threshold: float = 42.0, soften: 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     assets = Path(sys.argv[1]) if len(sys.argv) > 1 else root.parent / ".cursor/projects/Users-dmitriidekhanov-cozyreset-bot/assets"
-    out_dir = root / "public" / "images"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dirs = [root / "src" / "assets" / "icons", root / "public" / "images"]
+    for d in out_dirs:
+        d.mkdir(parents=True, exist_ok=True)
 
     mapping = [
         ("icon-mode-stuck-v2.png", "icon-mode-stuck.png"),
@@ -108,9 +109,10 @@ def main() -> None:
         if not src.exists():
             print(f"skip missing {src_name}")
             continue
-        dst = out_dir / out_name
-        remove_background(src, dst, threshold=48.0, soften=22.0)
-        print(f"OK {dst} ({dst.stat().st_size} bytes)")
+        for out_dir in out_dirs:
+            dst = out_dir / out_name
+            remove_background(src, dst, threshold=48.0, soften=22.0)
+            print(f"OK {dst} ({dst.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
