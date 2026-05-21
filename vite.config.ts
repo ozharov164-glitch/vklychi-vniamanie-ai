@@ -40,6 +40,7 @@ export default defineConfig({
     __APP_BUILD_ID__: JSON.stringify(buildId),
   },
   build: {
+    assetsInlineLimit: 0,
     rollupOptions: {
       output: {
         entryFileNames: 'assets/[name]-[hash].js',
