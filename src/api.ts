@@ -141,6 +141,21 @@ export type CognitiveBlock = {
   text: string
 }
 
+export type ClarificationResponse = {
+  ok: boolean
+  needsClarification: true
+  clarificationQuestion: string
+  clarificationHint: string
+  originalText?: string
+  clarificationReason?: string
+}
+
+export type FocusActionResult = ActionResponse | ClarificationResponse
+
+export function isClarificationResponse(r: FocusActionResult): r is ClarificationResponse {
+  return Boolean((r as ClarificationResponse).needsClarification)
+}
+
 export type ActionResponse = {
   ok: boolean
   sessionId: number
@@ -226,20 +241,44 @@ export async function apiInit(): Promise<InitResponse> {
   throw new Error(COPY.errors.auth)
 }
 
-export async function apiUnfreeze(mode: 'stuck' | 'noise', text: string, blocker: BlockerId = '') {
-  return post<ActionResponse>('/mini-app/focus/unfreeze', { mode, text, blocker: blocker || undefined })
+type FocusPostOpts = { clarificationFollowUp?: boolean }
+
+function focusBody(
+  extra: Record<string, unknown>,
+  opts?: FocusPostOpts,
+): Record<string, unknown> {
+  if (opts?.clarificationFollowUp) {
+    return { ...extra, clarificationFollowUp: true }
+  }
+  return extra
 }
 
-export async function apiBrainDump(text: string) {
-  return post<ActionResponse>('/mini-app/focus/brain-dump', { text })
+export async function apiUnfreeze(
+  mode: 'stuck' | 'noise',
+  text: string,
+  blocker: BlockerId = '',
+  opts?: FocusPostOpts,
+) {
+  return post<FocusActionResult>(
+    '/mini-app/focus/unfreeze',
+    focusBody({ mode, text, blocker: blocker || undefined }, opts),
+  )
 }
 
-export async function apiTaskSteps(task: string, fearLevel: number, blocker: BlockerId = '') {
-  return post<ActionResponse>('/mini-app/focus/steps', {
-    task,
-    fearLevel,
-    blocker: blocker || undefined,
-  })
+export async function apiBrainDump(text: string, opts?: FocusPostOpts) {
+  return post<FocusActionResult>('/mini-app/focus/brain-dump', focusBody({ text }, opts))
+}
+
+export async function apiTaskSteps(
+  task: string,
+  fearLevel: number,
+  blocker: BlockerId = '',
+  opts?: FocusPostOpts,
+) {
+  return post<FocusActionResult>(
+    '/mini-app/focus/steps',
+    focusBody({ task, fearLevel, blocker: blocker || undefined }, opts),
+  )
 }
 
 export async function apiRegenerate(sessionId: number, rejectedStep: string) {

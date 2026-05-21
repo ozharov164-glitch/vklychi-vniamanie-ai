@@ -229,13 +229,6 @@ export function UnfreezeResult() {
         )}
       </div>
 
-      {active.powerLine && (
-        <blockquote className="power-line">
-          <p className="power-line__text">{active.powerLine}</p>
-          {active.powerAuthor && <cite className="power-line__author">— {active.powerAuthor}</cite>}
-        </blockquote>
-      )}
-
       {display.userQuote && <p className="user-quote-line">«{display.userQuote}»</p>}
       {display.userPriority && <p className="priority-line">{display.userPriority}</p>}
 
@@ -249,6 +242,13 @@ export function UnfreezeResult() {
 
       {showThemeLabel && (
         <p className="unfreeze-card__label unfreeze-card__label--below">{active.taskLabel}</p>
+      )}
+
+      {active.powerLine && (
+        <blockquote className="power-line power-line--push">
+          <p className="power-line__text">{active.powerLine}</p>
+          {active.powerAuthor && <cite className="power-line__author">— {active.powerAuthor}</cite>}
+        </blockquote>
       )}
 
       {display.insight && <p className="insight-line">{display.insight}</p>}

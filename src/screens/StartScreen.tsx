@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { apiBrainDump, apiTaskSteps, apiUnfreeze, type BlockerId } from '../api'
+import {
+  apiBrainDump,
+  apiTaskSteps,
+  apiUnfreeze,
+  isClarificationResponse,
+  type BlockerId,
+} from '../api'
+import { ClarifySheet } from '../components/ClarifySheet'
 import { COPY } from '../lib/copy'
 import { useAppStore, type UnfreezeMode } from '../store'
 import { AiStatusLine } from '../components/AiStatusLine'
@@ -58,6 +65,10 @@ export function StartScreen() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [modeSwitchAnim, setModeSwitchAnim] = useState(false)
+  const [clarifyOpen, setClarifyOpen] = useState(false)
+  const [clarifyQuestion, setClarifyQuestion] = useState('')
+  const [clarifyHint, setClarifyHint] = useState('')
+  const [pendingBaseText, setPendingBaseText] = useState('')
   const overloadHandled = useRef(false)
 
   const totalStarts = stats.winsTotal + stats.sessionsToday
@@ -102,22 +113,36 @@ export function StartScreen() {
     )
   }
 
-  async function runAction() {
+  async function runAction(inputText?: string, opts?: { clarificationFollowUp?: boolean }) {
     if (!mode) return
+    const payload = (inputText ?? text).trim()
+    if (payload.length < 2) return
     setLoading(true)
     setError('')
     try {
       let res
-      const useBrainDump = mode === 'noise' || isOverload(text)
+      const useBrainDump = mode === 'noise' || isOverload(payload)
+      const postOpts = opts?.clarificationFollowUp
+        ? { clarificationFollowUp: true }
+        : undefined
       if (useBrainDump) {
-        res = await apiBrainDump(text)
-      } else if (isClearTask(text)) {
-        res = await apiTaskSteps(text, fearFromBlocker(blocker), blocker)
+        res = await apiBrainDump(payload, postOpts)
+      } else if (isClearTask(payload)) {
+        res = await apiTaskSteps(payload, fearFromBlocker(blocker), blocker, postOpts)
       } else {
-        res = await apiUnfreeze('stuck', text, blocker)
+        res = await apiUnfreeze('stuck', payload, blocker, postOpts)
+      }
+      if (isClarificationResponse(res)) {
+        setPendingBaseText(res.originalText || payload)
+        setClarifyQuestion(res.clarificationQuestion)
+        setClarifyHint(res.clarificationHint)
+        setClarifyOpen(true)
+        window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('warning')
+        return
       }
       if (res.aiUsage) setAiUsage(res.aiUsage)
       applyActionResponse(res, useBrainDump ? 'noise' : mode)
+      setClarifyOpen(false)
       setStep('result')
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
     } catch (e) {
@@ -126,6 +151,20 @@ export function StartScreen() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function mergeClarification(base: string, detail: string): string {
+    const b = base.trim()
+    const d = detail.trim()
+    if (!b) return d
+    if (!d) return b
+    return `${b}\n${d}`
+  }
+
+  function submitClarification(detail: string) {
+    const merged = mergeClarification(pendingBaseText || text, detail)
+    setText(merged)
+    void runAction(merged, { clarificationFollowUp: true })
   }
 
   function resetToPick() {
@@ -316,6 +355,15 @@ export function StartScreen() {
 
       <AiStatusLine />
       {!premium && <PremiumBanner />}
+
+      <ClarifySheet
+        open={clarifyOpen}
+        question={clarifyQuestion}
+        hint={clarifyHint}
+        loading={loading}
+        onClose={() => setClarifyOpen(false)}
+        onSubmit={submitClarification}
+      />
 
       <p className="disclaimer">{COPY.disclaimer}</p>
     </motion.div>
