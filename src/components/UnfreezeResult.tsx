@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { apiOutcome, apiRegenerate, type ThemeChoice } from '../api'
+import { apiOutcome, apiRegenerate, type CognitiveBlock, type ThemeChoice } from '../api'
 import { COPY } from '../lib/copy'
 import { useAppStore } from '../store'
 import { MeasurableMicroStepCard } from './MeasurableMicroStepCard'
@@ -40,6 +40,25 @@ function fireLightConfetti() {
   confettiRafId = requestAnimationFrame(tick)
 }
 
+function CognitiveBlocksList({ blocks }: { blocks: CognitiveBlock[] }) {
+  if (!blocks.length) return null
+  return (
+    <div className="brain-bucket brain-bucket--barriers">
+      <p className="brain-bucket__title">Психологические барьеры</p>
+      <ul className="cognitive-blocks__list cognitive-blocks__list--in-bucket">
+        {blocks.map((block) => (
+          <li key={`${block.icon}-${block.text.slice(0, 48)}`} className="cognitive-blocks__item">
+            <span className="cognitive-blocks__icon" aria-hidden>
+              {block.icon}
+            </span>
+            <span className="cognitive-blocks__text">{block.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function UnfreezeResult() {
   const active = useAppStore((s) => s.activeSession)
   const stats = useAppStore((s) => s.stats)
@@ -70,7 +89,7 @@ export function UnfreezeResult() {
 
   useEffect(() => {
     if (!active) return
-    setBucketsOpen(active.showBuckets)
+    setBucketsOpen(true)
     setWhyOpen(false)
     setPlanOpen(false)
     setShowAlternates(false)
@@ -79,10 +98,18 @@ export function UnfreezeResult() {
     setToast('')
   }, [active?.sessionId])
 
-  const bucketCount = useMemo(() => {
+  const breakdownCount = useMemo(() => {
     if (!active) return 0
     const b = active.buckets
-    return b.now.length + b.today.length + b.later.length + b.release.length
+    const blocks = active.cognitiveBlocks.length
+    const legacyRelease = blocks > 0 ? 0 : b.release.length
+    return blocks + b.now.length + b.today.length + b.later.length + legacyRelease
+  }, [active])
+
+  const hasBucketExtras = useMemo(() => {
+    if (!active) return false
+    const b = active.buckets
+    return b.now.length + b.today.length + b.later.length > 0
   }, [active])
 
   const progressDone = stats.doneToday ?? 0
@@ -95,6 +122,7 @@ export function UnfreezeResult() {
   const planItems = active.planLater.length ? active.planLater : active.steps.slice(1)
   const hasThemePicker = active.themeChoices.length >= 1
   const busy = finishing || regenerating
+  const showBreakdown = active.showBuckets && breakdownCount > 0
 
   function showToast(msg: string) {
     setToast(msg)
@@ -199,11 +227,8 @@ export function UnfreezeResult() {
 
       {active.userPriority && <p className="priority-line">{active.userPriority}</p>}
       {active.userQuote && <p className="user-quote-line">«{active.userQuote}»</p>}
-      {active.insight && <p className="insight-line">{active.insight}</p>}
 
-      {active.overloadIntro && (
-        <p className="overload-intro">{active.overloadIntro}</p>
-      )}
+      {active.overloadIntro && <p className="overload-intro">{active.overloadIntro}</p>}
 
       <MeasurableMicroStepCard
         sessionId={active.sessionId}
@@ -211,24 +236,44 @@ export function UnfreezeResult() {
         aiChoseForYou={active.aiChoseForYou}
       />
 
-      {active.cognitiveBlocks.length > 0 && (
-        <section className="cognitive-blocks" aria-label="Психологические барьеры">
-          <p className="cognitive-blocks__title">Психологические барьеры</p>
-          <ul className="cognitive-blocks__list">
-            {active.cognitiveBlocks.map((block) => (
-              <li key={`${block.icon}-${block.text.slice(0, 40)}`} className="cognitive-blocks__item">
-                <span className="cognitive-blocks__icon" aria-hidden>
-                  {block.icon}
-                </span>
-                <span className="cognitive-blocks__text">{block.text}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       {active.taskLabel && active.taskLabel !== displayStep && !/^[A-Z_]+$/.test(active.taskLabel) && (
         <p className="unfreeze-card__label unfreeze-card__label--below">{active.taskLabel}</p>
+      )}
+
+      {active.insight && <p className="insight-line">{active.insight}</p>}
+
+      {showBreakdown && (
+        <div className="brain-buckets brain-buckets--open">
+          <button
+            type="button"
+            className="brain-buckets__toggle brain-buckets__toggle--prominent"
+            onClick={() => setBucketsOpen((o) => !o)}
+            aria-expanded={bucketsOpen}
+          >
+            <span className="brain-buckets__chevron">{bucketsOpen ? '▼' : '▶'}</span>
+            <span>{COPY.result.bucketsLabel(breakdownCount)}</span>
+          </button>
+          <div
+            className={`brain-buckets__panel${bucketsOpen ? ' brain-buckets__panel--open' : ''}`}
+            aria-hidden={!bucketsOpen}
+          >
+            <div className="brain-buckets__panel-inner">
+              <div className="brain-buckets__grid">
+                <CognitiveBlocksList blocks={active.cognitiveBlocks} />
+                {active.cognitiveBlocks.length === 0 && active.buckets.release.length > 0 && (
+                  <Bucket title={COPY.result.bucketRelease} items={active.buckets.release} accent />
+                )}
+                {hasBucketExtras && (
+                  <>
+                    <Bucket title={COPY.result.bucketNow} items={active.buckets.now} />
+                    <Bucket title={COPY.result.bucketToday} items={active.buckets.today} />
+                    <Bucket title={COPY.result.bucketLater} items={active.buckets.later} />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {active.whyShort && (
@@ -264,37 +309,6 @@ export function UnfreezeResult() {
               )
             })}
           </div>
-        </div>
-      )}
-
-      {active.showBuckets && bucketCount > 0 && (
-        <div className="brain-buckets brain-buckets--open">
-          <button
-            type="button"
-            className="brain-buckets__toggle brain-buckets__toggle--prominent"
-            onClick={() => setBucketsOpen((o) => !o)}
-            aria-expanded={bucketsOpen}
-          >
-            <span className="brain-buckets__chevron">{bucketsOpen ? '▼' : '▶'}</span>
-            <span>{COPY.result.bucketsLabel(bucketCount)}</span>
-          </button>
-          <AnimatePresence initial={false}>
-            {bucketsOpen && (
-              <motion.div
-                className="brain-buckets__grid"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-              >
-                {active.buckets.release.length > 0 && active.cognitiveBlocks.length === 0 && (
-                  <Bucket title={COPY.result.bucketRelease} items={active.buckets.release} accent />
-                )}
-                <Bucket title={COPY.result.bucketNow} items={active.buckets.now} />
-                <Bucket title={COPY.result.bucketToday} items={active.buckets.today} />
-                <Bucket title={COPY.result.bucketLater} items={active.buckets.later} />
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       )}
 

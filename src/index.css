@@ -2254,11 +2254,39 @@ body::before {
   cursor: pointer;
 }
 
+.brain-buckets__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
+}
+
+.brain-buckets__panel--open {
+  grid-template-rows: 1fr;
+}
+
+.brain-buckets__panel-inner {
+  overflow: hidden;
+}
+
 .brain-buckets__grid {
   padding: 0 1rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+.brain-bucket--barriers {
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.cognitive-blocks__list--in-bucket {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .brain-bucket {
