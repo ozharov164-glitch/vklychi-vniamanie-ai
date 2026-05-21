@@ -138,6 +138,7 @@ export type ActionResponse = {
   patternLine?: string
   reflection: string
   microStep: string
+  measurableMicroStep?: string
   taskLabel: string
   nextSteps: string[]
   steps?: string[]

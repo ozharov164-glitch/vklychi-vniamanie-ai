@@ -14,6 +14,7 @@ export type ActiveSession = {
   emotionalTone: string
   whyShort: string
   microStep: string
+  measurableMicroStep: string
   taskLabel: string
   nextSteps: string[]
   planLater: string[]
@@ -79,13 +80,19 @@ export const useAppStore = create<AppState>((set) => ({
   setMicroStep: (microStep) =>
     set((state) =>
       state.activeSession
-        ? { activeSession: { ...state.activeSession, microStep } }
+        ? {
+            activeSession: {
+              ...state.activeSession,
+              microStep,
+              measurableMicroStep: microStep,
+            },
+          }
         : state,
     ),
   applyActionResponse: (res, mode) => {
     const effectiveMode: UnfreezeMode =
       res.mode === 'noise' ? 'noise' : res.mode === 'stuck' ? 'stuck' : mode
-    const micro = res.microStep || res.lightest || ''
+    const micro = res.measurableMicroStep || res.microStep || res.lightest || ''
     const choices = (res.themeChoices || []).filter((c) => c.anchor && c.label)
     const choiceAnchors = new Set(choices.map((c) => c.anchor))
     const alternates = [
@@ -107,6 +114,7 @@ export const useAppStore = create<AppState>((set) => ({
         emotionalTone: res.emotionalTone || '',
         whyShort: res.whyShort || res.whyLightest || '',
         microStep: micro,
+        measurableMicroStep: micro,
         taskLabel: res.taskLabel || 'Твой шаг',
         nextSteps: res.nextSteps || [],
         planLater: res.planLater || res.nextSteps || [],

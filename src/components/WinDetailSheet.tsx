@@ -123,8 +123,10 @@ export function WinDetailSheet({ sessionId, onClose }: Props) {
                 )}
 
                 {data.microStep && (
-                  <section className="win-sheet__anchor">
-                    <p className="win-sheet__label">{COPY.wins.detailAnchor}</p>
+                  <section className="win-sheet__anchor win-sheet__anchor--measurable">
+                    <p className="win-sheet__label">
+                      {COPY.result.measurableTag} · {COPY.wins.detailAnchor}
+                    </p>
                     {data.taskLabel && data.taskLabel !== data.microStep && (
                       <p className="win-sheet__task">{data.taskLabel}</p>
                     )}

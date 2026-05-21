@@ -1,8 +1,37 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import confetti from 'canvas-confetti'
 import { apiOutcome, apiRegenerate, type ThemeChoice } from '../api'
 import { COPY } from '../lib/copy'
 import { useAppStore } from '../store'
+import { MeasurableMicroStepCard } from './MeasurableMicroStepCard'
+
+function fireLightConfetti() {
+  const end = Date.now() + 2000
+  const colors = ['#8b5cf6', '#38bdf8', '#c4b5fd', '#ffffff']
+  const tick = () => {
+    confetti({
+      particleCount: 4,
+      angle: 60,
+      spread: 50,
+      origin: { x: 0, y: 0.7 },
+      colors,
+      disableForReducedMotion: true,
+      zIndex: 9998,
+    })
+    confetti({
+      particleCount: 4,
+      angle: 120,
+      spread: 50,
+      origin: { x: 1, y: 0.7 },
+      colors,
+      disableForReducedMotion: true,
+      zIndex: 9998,
+    })
+    if (Date.now() < end) requestAnimationFrame(tick)
+  }
+  tick()
+}
 
 export function UnfreezeResult() {
   const active = useAppStore((s) => s.activeSession)
@@ -13,7 +42,6 @@ export function UnfreezeResult() {
   const setMicroStep = useAppStore((s) => s.setMicroStep)
 
   const [finishing, setFinishing] = useState(false)
-  const [anchorPulse, setAnchorPulse] = useState(0)
   const [regenerating, setRegenerating] = useState(false)
   const [bucketsOpen, setBucketsOpen] = useState(true)
   const [whyOpen, setWhyOpen] = useState(false)
@@ -30,7 +58,6 @@ export function UnfreezeResult() {
     setShowAlternates(false)
     setClosePhase('idle')
     setError('')
-    setAnchorPulse(0)
   }, [active?.sessionId])
 
   const bucketCount = useMemo(() => {
@@ -41,7 +68,7 @@ export function UnfreezeResult() {
 
   if (!active) return null
 
-  const displayStep = active.microStep
+  const displayStep = active.measurableMicroStep || active.microStep
   const alternatesVisible = active.alternates.filter((a) => a !== displayStep)
   const planItems = active.planLater.length ? active.planLater : active.steps.slice(1)
   const hasThemePicker = active.themeChoices.length >= 1
@@ -50,7 +77,6 @@ export function UnfreezeResult() {
   function applyAnchor(anchor: string) {
     if (!anchor || anchor === displayStep) return
     setMicroStep(anchor)
-    setAnchorPulse((n) => n + 1)
     window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
     document.getElementById('focus-anchor-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
@@ -71,6 +97,7 @@ export function UnfreezeResult() {
     try {
       const res = await apiOutcome(active.sessionId, outcome, helpWorked)
       setStats(res.stats)
+      if (outcome === 'done') fireLightConfetti()
       setActiveSession(null)
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
     } catch (e) {
@@ -113,31 +140,20 @@ export function UnfreezeResult() {
       {active.userQuote && <p className="user-quote-line">«{active.userQuote}»</p>}
       {active.insight && <p className="insight-line">{active.insight}</p>}
 
-      <div
-        id="focus-anchor-card"
-        className={`unfreeze-card unfreeze-card--hero unfreeze-card--${active.mode}${anchorPulse ? ' unfreeze-card--pulse' : ''}`}
-        key={`anchor-${anchorPulse}-${displayStep.slice(0, 24)}`}
-      >
-        <p className="unfreeze-card__eyebrow">{COPY.result.anchorEyebrow}</p>
-        {active.taskLabel && active.taskLabel !== displayStep && !/^[A-Z_]+$/.test(active.taskLabel) && (
-          <p className="unfreeze-card__label">{active.taskLabel}</p>
-        )}
-        <motion.p
-          className="unfreeze-card__step"
-          key={displayStep}
-          initial={{ opacity: 0.4, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28 }}
-        >
-          {displayStep}
-        </motion.p>
-        {active.whyShort && (
+      <MeasurableMicroStepCard key={`${active.sessionId}-${displayStep}`} step={displayStep} />
+
+      {active.taskLabel && active.taskLabel !== displayStep && !/^[A-Z_]+$/.test(active.taskLabel) && (
+        <p className="unfreeze-card__label unfreeze-card__label--below">{active.taskLabel}</p>
+      )}
+
+      {active.whyShort && (
+        <div className="unfreeze-card unfreeze-card--why">
           <button type="button" className="why-toggle" onClick={() => setWhyOpen((o) => !o)}>
             {whyOpen ? COPY.result.whyToggleClose : COPY.result.whyToggleOpen}
           </button>
-        )}
-        {whyOpen && active.whyShort && <p className="unfreeze-card__reflection">{active.whyShort}</p>}
-      </div>
+          {whyOpen && <p className="unfreeze-card__reflection">{active.whyShort}</p>}
+        </div>
+      )}
 
       {regenerating && <p className="hint-line hint-line--pulse">{COPY.result.regenerating}</p>}
       {error && <p className="field-error">{error}</p>}

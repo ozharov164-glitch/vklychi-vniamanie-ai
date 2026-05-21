@@ -84,8 +84,13 @@ export function WinsScreen() {
           <p className="stat-card__value stat-card__value--muted">{stats.sessionsToday}</p>
           <p className="stat-card__label">{COPY.wins.today}</p>
         </div>
-        <div className="stat-card">
-          <p className="stat-card__value stat-card__value--accent">{stats.streakDays || 0}</p>
+        <div className="stat-card stat-card--streak">
+          <p className="stat-card__value stat-card__value--streak">
+            <span className="stat-card__fire" aria-hidden>
+              🔥
+            </span>
+            {stats.streakDays || 0}
+          </p>
           <p className="stat-card__label">{COPY.wins.streak}</p>
         </div>
       </div>
@@ -134,8 +139,11 @@ export function WinsScreen() {
                   </span>
                 </div>
                 <p className="wins-item__task">{preview}</p>
-                {item.microStep && preview !== item.microStep && (
-                  <p className="wins-item__step">{item.microStep}</p>
+                {item.microStep && (
+                  <p className="wins-item__measurable">
+                    <span className="wins-item__measurable-tag">{COPY.wins.microStepTag}</span>
+                    {item.microStep}
+                  </p>
                 )}
                 {item.helpWorked && (
                   <p className="wins-item__help">

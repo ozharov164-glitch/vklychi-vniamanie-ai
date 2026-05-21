@@ -38,8 +38,9 @@ export const COPY = {
   },
 
   overload: {
-    title: 'Похоже, перегруз',
-    text: 'Сначала разложим мысли — без чек-листа вокруг одной задачи.',
+    title: 'Похоже на перегруз',
+    text: 'Давай разложим мысли — без чек-листа вокруг одной задачи.',
+    autoSwitch: 'Похоже на перегруз — давай разложим мысли',
     btnAnalyze: 'Разложить мысли',
     btnAnalyzeStuck: 'Сначала разложить мысли',
     btnLoading: 'Разбираю мысли…',
@@ -70,6 +71,8 @@ export const COPY = {
     label: 'В прошлый раз помогло',
   },
 
+  encouragement: 'Вы уже 3 раза начинали с опоры — в этот раз получится ещё быстрее',
+
   result: {
     anchorEyebrow: 'Опора сейчас',
     whyToggleOpen: '▼ Зачем именно это',
@@ -99,6 +102,10 @@ export const COPY = {
     helpHint: 'Один тап — чтобы в следующий раз помнить, что сработало.',
     helpSkip: 'Пропустить',
     regenerating: 'Подбираю другую опору — конкретнее…',
+    measurableCaption: 'Шаг на 1 минуту',
+    measurableHint: 'Это можно сделать за 1 минуту',
+    measurableDone: 'Сделано',
+    measurableTag: 'Микро-шаг',
   },
 
   helpWorked: [
@@ -116,7 +123,8 @@ export const COPY = {
     loading: 'Загружаю…',
     empty1: 'Пока пусто — и это нормально.',
     empty2: 'Сделай первый шаг на вкладке «Старт».',
-    helped: 'Помогло:',
+    helped: 'Что помогло:',
+    microStepTag: 'Микро-шаг',
     streak: 'дней подряд',
     total: 'всего',
     today: 'сегодня',

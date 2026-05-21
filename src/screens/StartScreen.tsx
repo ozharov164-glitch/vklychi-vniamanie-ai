@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { apiBrainDump, apiTaskSteps, apiUnfreeze, type BlockerId } from '../api'
 import { COPY } from '../lib/copy'
 import { useAppStore, type UnfreezeMode } from '../store'
@@ -36,7 +36,7 @@ function isClearTask(text: string): boolean {
 }
 
 /** Несколько болей сразу — разбор мыслей, не чек-лист по одной задаче. */
-function isOverload(text: string): boolean {
+export function isOverload(text: string): boolean {
   return /(алкогол|зависим|предательств|разрыв|девушк|навалил|перегруз|кризис|мести|вина|устал|без\s*сил|тревог|паник|выгор|не\s*могу|бросить|плач)/i.test(
     text,
   )
@@ -53,9 +53,15 @@ export function StartScreen() {
   const [step, setStep] = useState<Step>(activeSession ? 'result' : 'pick')
   const [mode, setMode] = useState<UnfreezeMode | null>(activeSession?.mode ?? null)
   const [text, setText] = useState('')
+  const [savedStuckText, setSavedStuckText] = useState('')
   const [blocker, setBlocker] = useState<BlockerId>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [modeSwitchAnim, setModeSwitchAnim] = useState(false)
+  const overloadHandled = useRef(false)
+
+  const totalStarts = stats.winsTotal + stats.sessionsToday
+  const showEncouragement = totalStarts >= 3
 
   useEffect(() => {
     if (!activeSession && step === 'result') {
@@ -63,8 +69,23 @@ export function StartScreen() {
       setMode(null)
       setText('')
       setBlocker('')
+      setSavedStuckText('')
+      overloadHandled.current = false
     }
   }, [activeSession, step])
+
+  useEffect(() => {
+    if (mode !== 'stuck' || step !== 'input') return
+    if (!isOverload(text) || text.trim().length < 2) return
+    if (overloadHandled.current) return
+    overloadHandled.current = true
+    setSavedStuckText(text)
+    setModeSwitchAnim(true)
+    setMode('noise')
+    window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('warning')
+    const t = window.setTimeout(() => setModeSwitchAnim(false), 1200)
+    return () => window.clearTimeout(t)
+  }, [text, mode, step])
 
   if (activeSession || step === 'result') {
     return (
@@ -113,14 +134,16 @@ export function StartScreen() {
     setText('')
     setBlocker('')
     setError('')
+    setSavedStuckText('')
+    overloadHandled.current = false
   }
 
-  const overload = mode === 'stuck' && isOverload(text) && text.trim().length >= 2
+  const overloadBanner = mode === 'noise' && savedStuckText && isOverload(savedStuckText)
+  const hideBlockerChips = mode === 'noise' && (isOverload(text) || Boolean(savedStuckText))
 
   function primaryButtonLabel() {
     if (mode === 'noise' || isOverload(text)) {
       if (loading) return COPY.overload.btnLoading
-      if (overload) return COPY.overload.btnAnalyzeStuck
       return COPY.overload.btnAnalyze
     }
     return COPY.actions.next
@@ -136,6 +159,10 @@ export function StartScreen() {
           <p className="start-hero__subtitle">{COPY.hero.subtitle}</p>
         </div>
       </header>
+
+      {showEncouragement && (
+        <p className="encouragement-banner">{COPY.encouragement}</p>
+      )}
 
       {(() => {
         const tip = memory.find((m) => m.helpWorked?.trim())
@@ -169,6 +196,7 @@ export function StartScreen() {
               onClick={() => {
                 setMode('stuck')
                 setStep('input')
+                overloadHandled.current = false
               }}
             >
               <ModeIcon mode="stuck" />
@@ -181,6 +209,7 @@ export function StartScreen() {
               onClick={() => {
                 setMode('noise')
                 setStep('input')
+                overloadHandled.current = false
               }}
             >
               <ModeIcon mode="noise" />
@@ -196,22 +225,41 @@ export function StartScreen() {
           <button type="button" className="link-back" onClick={step === 'blocker' ? () => setStep('input') : resetToPick}>
             {COPY.actions.back}
           </button>
-          <div className="mode-input-head">
-            <ModeIcon mode={mode} />
-            <div>
-              <p className="section-label section-label--inline">{COPY.modes[mode].title}</p>
-              <p className="hint-line hint-line--tight">{COPY.modes[mode].hint}</p>
-            </div>
-          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={mode}
+              className={`mode-input-head${modeSwitchAnim ? ' mode-input-head--switch' : ''}`}
+              initial={{ opacity: 0, x: mode === 'noise' ? 12 : -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35 }}
+            >
+              <ModeIcon mode={mode} />
+              <div>
+                <p className="section-label section-label--inline">{COPY.modes[mode].title}</p>
+                <p className="hint-line hint-line--tight">{COPY.modes[mode].hint}</p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
 
           {step === 'input' && (
             <>
-              {overload && (
-                <div className="overload-banner overload-banner--stuck">
-                  <p className="overload-banner__title">{COPY.overload.title}</p>
-                  <p className="overload-banner__text">{COPY.overload.text}</p>
-                </div>
+              {(overloadBanner || modeSwitchAnim) && (
+                <motion.div
+                  className="overload-banner overload-banner--auto"
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <p className="overload-banner__title">{COPY.overload.autoSwitch}</p>
+                  {savedStuckText && (
+                    <p className="overload-banner__text hint-line--tight">
+                      Исходный текст сохранён — после разбора можно вернуться к задаче.
+                    </p>
+                  )}
+                </motion.div>
               )}
+
               <VoiceTextField
                 id="focus-input"
                 multiline
@@ -225,14 +273,18 @@ export function StartScreen() {
                 type="button"
                 className="btn-primary btn-primary--glow"
                 disabled={loading || text.trim().length < 2}
-                onClick={() => (mode === 'stuck' && !isOverload(text) ? setStep('blocker') : runAction())}
+                onClick={() =>
+                  mode === 'stuck' && !isOverload(text) && !hideBlockerChips
+                    ? setStep('blocker')
+                    : runAction()
+                }
               >
                 {primaryButtonLabel()}
               </button>
             </>
           )}
 
-          {step === 'blocker' && mode === 'stuck' && (
+          {step === 'blocker' && mode === 'stuck' && !hideBlockerChips && (
             <>
               <p className="section-label">{COPY.blockers.section}</p>
               <div className="blocker-chips">
