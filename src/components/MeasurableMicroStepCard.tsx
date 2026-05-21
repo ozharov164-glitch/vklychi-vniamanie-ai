@@ -39,7 +39,7 @@ export function MeasurableMicroStepCard({ step, sessionKey }: Props) {
       }}
     >
       <div className="measurable-step-card__icon" aria-hidden>
-        <img src={images.flashStep} alt="" className="measurable-step-card__icon-img" width={40} height={40} draggable={false} />
+        <img src={images.flashStep} alt="" width={32} height={32} />
         <span className="measurable-step-card__bolt">⚡</span>
       </div>
       <p className="measurable-step-card__caption">{COPY.result.measurableCaption}</p>
