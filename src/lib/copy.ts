@@ -104,8 +104,11 @@ export const COPY = {
     regenerating: 'Подбираю другую опору — конкретнее…',
     measurableCaption: 'Шаг на 1 минуту',
     measurableHint: 'Это можно сделать за 1 минуту',
-    measurableDone: 'Сделано',
+    measurableDone: 'Сделал(а)',
     measurableTag: 'Микро-шаг',
+    themeAlreadyActive: 'Это уже ваша текущая опора',
+    todayProgressLabel: (done: number, total: number) =>
+      `Сегодня выполнено: ${done}/${total} микро-шагов`,
   },
 
   helpWorked: [
@@ -125,6 +128,8 @@ export const COPY = {
     empty2: 'Сделай первый шаг на вкладке «Старт».',
     helped: 'Что помогло:',
     microStepTag: 'Микро-шаг',
+    microStepsTotal: 'микро-шагов создано',
+    completionPct: 'завершено',
     streak: 'дней подряд',
     total: 'всего',
     today: 'сегодня',

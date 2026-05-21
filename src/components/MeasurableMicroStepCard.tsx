@@ -1,34 +1,42 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { COPY } from '../lib/copy'
 import { images } from '../lib/assets'
 
 type Props = {
   step: string
-  onReset?: () => void
+  sessionKey: string | number
 }
 
-export function MeasurableMicroStepCard({ step }: Props) {
-  const [pulsed, setPulsed] = useState(false)
+export function MeasurableMicroStepCard({ step, sessionKey }: Props) {
+  const [pulseAnim, setPulseAnim] = useState(false)
+  const [showDoneAction, setShowDoneAction] = useState(false)
   const [done, setDone] = useState(false)
 
+  useEffect(() => {
+    setPulseAnim(false)
+    setShowDoneAction(false)
+    setDone(false)
+  }, [sessionKey, step])
+
   function onCardClick() {
-    setPulsed(true)
+    if (done) return
+    setShowDoneAction(true)
+    setPulseAnim(true)
     window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
-    window.setTimeout(() => setPulsed(false), 420)
+    window.setTimeout(() => setPulseAnim(false), 480)
   }
 
   return (
     <motion.div
       id="focus-anchor-card"
-      className={`measurable-step-card${pulsed ? ' measurable-step-card--pulse' : ''}${done ? ' measurable-step-card--done' : ''}`}
+      className={`measurable-step-card${pulseAnim ? ' measurable-step-card--pulse' : ''}${done ? ' measurable-step-card--done' : ''}`}
       onClick={onCardClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onCardClick()
       }}
-      layout
     >
       <div className="measurable-step-card__icon" aria-hidden>
         <img src={images.flashStep} alt="" width={32} height={32} />
@@ -45,7 +53,7 @@ export function MeasurableMicroStepCard({ step }: Props) {
         {step}
       </motion.p>
       <p className="measurable-step-card__hint">{COPY.result.measurableHint}</p>
-      {pulsed && (
+      {showDoneAction && (
         <motion.button
           type="button"
           className="measurable-step-card__done-btn"
@@ -57,7 +65,7 @@ export function MeasurableMicroStepCard({ step }: Props) {
             window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('success')
           }}
         >
-          {done ? '✓ ' + COPY.result.measurableDone : COPY.result.measurableDone}
+          {done ? `✓ ${COPY.result.measurableDone}` : COPY.result.measurableDone}
         </motion.button>
       )}
     </motion.div>

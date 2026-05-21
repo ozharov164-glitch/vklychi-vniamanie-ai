@@ -125,7 +125,14 @@ export type InitResponse = {
   isPremium: boolean
   ownerUnlimited?: boolean
   aiUsage: { aiUsedToday: number; hintsLimit: number; ownerUnlimited?: boolean }
-  stats: { sessionsToday: number; winsTotal: number; streakDays: number }
+  stats: {
+    sessionsToday: number
+    winsTotal: number
+    streakDays: number
+    microStepsTotal?: number
+    completionPct?: number
+    doneToday?: number
+  }
   memory?: FocusMemoryItem[]
 }
 

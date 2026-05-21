@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { apiOutcome, apiRegenerate, type ThemeChoice } from '../api'
@@ -6,7 +6,10 @@ import { COPY } from '../lib/copy'
 import { useAppStore } from '../store'
 import { MeasurableMicroStepCard } from './MeasurableMicroStepCard'
 
+let confettiRafId = 0
+
 function fireLightConfetti() {
+  if (confettiRafId) cancelAnimationFrame(confettiRafId)
   const end = Date.now() + 2000
   const colors = ['#8b5cf6', '#38bdf8', '#c4b5fd', '#ffffff']
   const tick = () => {
@@ -28,13 +31,19 @@ function fireLightConfetti() {
       disableForReducedMotion: true,
       zIndex: 9998,
     })
-    if (Date.now() < end) requestAnimationFrame(tick)
+    if (Date.now() < end) {
+      confettiRafId = requestAnimationFrame(tick)
+    } else {
+      confettiRafId = 0
+    }
   }
-  tick()
+  confettiRafId = requestAnimationFrame(tick)
 }
 
 export function UnfreezeResult() {
   const active = useAppStore((s) => s.activeSession)
+  const stats = useAppStore((s) => s.stats)
+  const aiUsage = useAppStore((s) => s.aiUsage)
   const applyActionResponse = useAppStore((s) => s.applyActionResponse)
   const setActiveSession = useAppStore((s) => s.setActiveSession)
   const setStats = useAppStore((s) => s.setStats)
@@ -49,6 +58,15 @@ export function UnfreezeResult() {
   const [showAlternates, setShowAlternates] = useState(false)
   const [closePhase, setClosePhase] = useState<'idle' | 'help'>('idle')
   const [error, setError] = useState('')
+  const [toast, setToast] = useState('')
+  const toastTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (confettiRafId) cancelAnimationFrame(confettiRafId)
+      if (toastTimer.current) window.clearTimeout(toastTimer.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (!active) return
@@ -58,6 +76,7 @@ export function UnfreezeResult() {
     setShowAlternates(false)
     setClosePhase('idle')
     setError('')
+    setToast('')
   }, [active?.sessionId])
 
   const bucketCount = useMemo(() => {
@@ -65,6 +84,9 @@ export function UnfreezeResult() {
     const b = active.buckets
     return b.now.length + b.today.length + b.later.length + b.release.length
   }, [active])
+
+  const progressDone = stats.doneToday ?? 0
+  const progressTotal = Math.max(stats.sessionsToday ?? 0, progressDone, 1)
 
   if (!active) return null
 
@@ -74,6 +96,12 @@ export function UnfreezeResult() {
   const hasThemePicker = active.themeChoices.length >= 1
   const busy = finishing || regenerating
 
+  function showToast(msg: string) {
+    setToast(msg)
+    if (toastTimer.current) window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(''), 2400)
+  }
+
   function applyAnchor(anchor: string) {
     if (!anchor || anchor === displayStep) return
     setMicroStep(anchor)
@@ -82,6 +110,11 @@ export function UnfreezeResult() {
   }
 
   function pickTheme(choice: ThemeChoice) {
+    if (displayStep === choice.anchor) {
+      showToast(COPY.result.themeAlreadyActive)
+      window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
+      return
+    }
     applyAnchor(choice.anchor)
   }
 
@@ -129,6 +162,34 @@ export function UnfreezeResult() {
 
   return (
     <motion.div className="unfreeze-result stack" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <AnimatePresence>
+        {toast && (
+          <motion.p
+            className="focus-toast"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            {toast}
+          </motion.p>
+        )}
+      </AnimatePresence>
+
+      <div className="today-progress" aria-label={COPY.result.todayProgressLabel(progressDone, progressTotal)}>
+        <p className="today-progress__label">{COPY.result.todayProgressLabel(progressDone, progressTotal)}</p>
+        <div className="today-progress__track">
+          <div
+            className="today-progress__fill"
+            style={{ width: `${Math.min(100, Math.round((progressDone / progressTotal) * 100))}%` }}
+          />
+        </div>
+        {aiUsage.hintsLimit < 999 && (
+          <p className="today-progress__hint">
+            {COPY.ai.quota(aiUsage.aiUsedToday, aiUsage.hintsLimit)}
+          </p>
+        )}
+      </div>
+
       {active.powerLine && (
         <blockquote className="power-line">
           <p className="power-line__text">{active.powerLine}</p>
@@ -140,7 +201,10 @@ export function UnfreezeResult() {
       {active.userQuote && <p className="user-quote-line">«{active.userQuote}»</p>}
       {active.insight && <p className="insight-line">{active.insight}</p>}
 
-      <MeasurableMicroStepCard key={`${active.sessionId}-${displayStep}`} step={displayStep} />
+      <MeasurableMicroStepCard
+        sessionKey={`${active.sessionId}-${displayStep}`}
+        step={displayStep}
+      />
 
       {active.taskLabel && active.taskLabel !== displayStep && !/^[A-Z_]+$/.test(active.taskLabel) && (
         <p className="unfreeze-card__label unfreeze-card__label--below">{active.taskLabel}</p>
@@ -169,7 +233,7 @@ export function UnfreezeResult() {
                 <button
                   key={c.id}
                   type="button"
-                  className={`priority-chip${on ? ' priority-chip--on' : ''}`}
+                  className={`priority-chip${on ? ' priority-chip--on priority-chip--pulse-hint' : ''}`}
                   onClick={() => pickTheme(c)}
                   disabled={busy}
                 >

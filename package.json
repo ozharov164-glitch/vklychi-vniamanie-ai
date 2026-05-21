@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "VITE_BUILD_ID=20260521-focus-v3 vite build",
+    "build": "VITE_BUILD_ID=20260521-focus-v4 vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

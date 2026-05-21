@@ -37,7 +37,14 @@ type AppState = {
   premium: boolean
   ownerUnlimited: boolean
   aiUsage: { aiUsedToday: number; hintsLimit: number; ownerUnlimited?: boolean }
-  stats: { sessionsToday: number; winsTotal: number; streakDays: number }
+  stats: {
+    sessionsToday: number
+    winsTotal: number
+    streakDays: number
+    microStepsTotal: number
+    completionPct: number
+    doneToday: number
+  }
   memory: FocusMemoryItem[]
   tab: TabId
   history: FocusHistoryItem[]
@@ -58,7 +65,14 @@ export const useAppStore = create<AppState>((set) => ({
   premium: false,
   ownerUnlimited: false,
   aiUsage: { aiUsedToday: 0, hintsLimit: 6 },
-  stats: { sessionsToday: 0, winsTotal: 0, streakDays: 0 },
+  stats: {
+    sessionsToday: 0,
+    winsTotal: 0,
+    streakDays: 0,
+    microStepsTotal: 0,
+    completionPct: 0,
+    doneToday: 0,
+  },
   memory: [],
   tab: 'start',
   history: [],

@@ -2806,3 +2806,63 @@ html[data-tg-theme='light'] .insight-line {
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
+
+.priority-chip--pulse-hint {
+  animation: chip-hint-pulse 0.55s ease;
+}
+
+@keyframes chip-hint-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+.focus-toast {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 20;
+  margin: 0 0 0.5rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  text-align: center;
+  background: rgba(30, 41, 59, 0.92);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: #e2e8f0;
+}
+
+.today-progress {
+  margin-bottom: 0.75rem;
+}
+
+.today-progress__label {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.today-progress__track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.today-progress__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7c3aed, #38bdf8);
+  transition: width 0.35s ease;
+}
+
+.today-progress__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}

@@ -77,12 +77,12 @@ export function WinsScreen() {
 
       <div className="stat-grid stat-grid--3">
         <div className="stat-card">
-          <p className="stat-card__value">{stats.winsTotal}</p>
-          <p className="stat-card__label">{COPY.wins.total}</p>
+          <p className="stat-card__value">{stats.microStepsTotal ?? stats.winsTotal}</p>
+          <p className="stat-card__label">{COPY.wins.microStepsTotal}</p>
         </div>
         <div className="stat-card">
-          <p className="stat-card__value stat-card__value--muted">{stats.sessionsToday}</p>
-          <p className="stat-card__label">{COPY.wins.today}</p>
+          <p className="stat-card__value stat-card__value--accent">{stats.completionPct ?? 0}%</p>
+          <p className="stat-card__label">{COPY.wins.completionPct}</p>
         </div>
         <div className="stat-card stat-card--streak">
           <p className="stat-card__value stat-card__value--streak">

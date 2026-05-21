@@ -1,8 +1,8 @@
 /** Все иконки импортируются через Vite → URL с content-hash, без кэша старых PNG в public/. */
 import splashLogo from '../assets/splash-logo.png'
-import modeStuck from '../../public/assets/icons/unfreeze-icon.svg'
-import modeNoise from '../../public/assets/icons/brain-dump-icon.svg'
-import flashStep from '../../public/assets/icons/flash-step.svg'
+import modeStuck from '../../public/assets/images/unfreeze-icon.png'
+import modeNoise from '../../public/assets/images/brain-dump-icon.png'
+import flashStep from '../../public/assets/images/flash-step.png'
 import tabUnfreeze from '../assets/icons/icon-tab-unfreeze.png'
 import tabWins from '../assets/icons/icon-tab-wins.png'
 
