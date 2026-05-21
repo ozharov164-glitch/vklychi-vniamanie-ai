@@ -63,7 +63,6 @@ export function MeasurableMicroStepCard({ step, sessionId, aiChoseForYou }: Prop
     >
       <div className="measurable-step-card__icon" aria-hidden>
         <img src={images.flashStep} alt="" width={32} height={32} />
-        <span className="measurable-step-card__bolt">⚡</span>
       </div>
       {aiChoseForYou && (
         <p className="measurable-step-card__ai-badge">⭐ AI выбрал за тебя</p>

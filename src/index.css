@@ -2275,18 +2275,13 @@ body::before {
   gap: 0.65rem;
 }
 
-.brain-bucket--barriers {
-  border: 1px solid rgba(139, 92, 246, 0.28);
-  background: rgba(139, 92, 246, 0.08);
-}
-
-.cognitive-blocks__list--in-bucket {
+.cognitive-blocks__list--flat {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .brain-bucket {
@@ -2808,21 +2803,16 @@ html[data-tg-theme='light'] .insight-line {
 }
 
 .cognitive-blocks__item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.75rem 0.85rem;
-  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
   font-size: 14px;
   line-height: 1.5;
-  background: rgba(255, 255, 255, 0.06);
-  border-left: 3px solid rgba(139, 92, 246, 0.65);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .cognitive-blocks__icon {
-  flex-shrink: 0;
-  font-size: 1.1rem;
-  line-height: 1.4;
+  display: none;
 }
 
 .cognitive-blocks__text {

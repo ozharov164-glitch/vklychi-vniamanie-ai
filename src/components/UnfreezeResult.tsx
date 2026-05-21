@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { apiOutcome, apiRegenerate, type CognitiveBlock, type ThemeChoice } from '../api'
 import { COPY } from '../lib/copy'
+import { pickDisplayEcho } from '../lib/displayDedupe'
 import { useAppStore } from '../store'
 import { MeasurableMicroStepCard } from './MeasurableMicroStepCard'
 
@@ -43,19 +44,13 @@ function fireLightConfetti() {
 function CognitiveBlocksList({ blocks }: { blocks: CognitiveBlock[] }) {
   if (!blocks.length) return null
   return (
-    <div className="brain-bucket brain-bucket--barriers">
-      <p className="brain-bucket__title">Психологические барьеры</p>
-      <ul className="cognitive-blocks__list cognitive-blocks__list--in-bucket">
-        {blocks.map((block) => (
-          <li key={`${block.icon}-${block.text.slice(0, 48)}`} className="cognitive-blocks__item">
-            <span className="cognitive-blocks__icon" aria-hidden>
-              {block.icon}
-            </span>
-            <span className="cognitive-blocks__text">{block.text}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="cognitive-blocks__list cognitive-blocks__list--flat">
+      {blocks.map((block) => (
+        <li key={`${block.text.slice(0, 48)}`} className="cognitive-blocks__item">
+          <span className="cognitive-blocks__text">{block.text}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -123,6 +118,22 @@ export function UnfreezeResult() {
   const hasThemePicker = active.themeChoices.length >= 1
   const busy = finishing || regenerating
   const showBreakdown = active.showBuckets && breakdownCount > 0
+
+  const display = pickDisplayEcho({
+    userQuote: active.userQuote,
+    userPriority: active.userPriority,
+    insight: active.insight,
+    whyShort: active.whyShort,
+    overloadIntro: active.overloadIntro,
+    microStep: displayStep,
+    firstBlockText: active.cognitiveBlocks[0]?.text || '',
+  })
+
+  const showThemeLabel =
+    active.taskLabel &&
+    active.taskLabel !== displayStep &&
+    !/^[A-Z_,\s]+$/.test(active.taskLabel) &&
+    !display.userQuote
 
   function showToast(msg: string) {
     setToast(msg)
@@ -225,8 +236,8 @@ export function UnfreezeResult() {
         </blockquote>
       )}
 
-      {active.userPriority && <p className="priority-line">{active.userPriority}</p>}
-      {active.userQuote && <p className="user-quote-line">«{active.userQuote}»</p>}
+      {display.userQuote && <p className="user-quote-line">«{display.userQuote}»</p>}
+      {display.userPriority && <p className="priority-line">{display.userPriority}</p>}
 
       {active.overloadIntro && <p className="overload-intro">{active.overloadIntro}</p>}
 
@@ -236,11 +247,11 @@ export function UnfreezeResult() {
         aiChoseForYou={active.aiChoseForYou}
       />
 
-      {active.taskLabel && active.taskLabel !== displayStep && !/^[A-Z_]+$/.test(active.taskLabel) && (
+      {showThemeLabel && (
         <p className="unfreeze-card__label unfreeze-card__label--below">{active.taskLabel}</p>
       )}
 
-      {active.insight && <p className="insight-line">{active.insight}</p>}
+      {display.insight && <p className="insight-line">{display.insight}</p>}
 
       {showBreakdown && (
         <div className="brain-buckets brain-buckets--open">
@@ -276,12 +287,12 @@ export function UnfreezeResult() {
         </div>
       )}
 
-      {active.whyShort && (
+      {display.whyShort && (
         <div className="unfreeze-card unfreeze-card--why">
           <button type="button" className="why-toggle" onClick={() => setWhyOpen((o) => !o)}>
             {whyOpen ? COPY.result.whyToggleClose : COPY.result.whyToggleOpen}
           </button>
-          {whyOpen && <p className="unfreeze-card__reflection">{active.whyShort}</p>}
+          {whyOpen && <p className="unfreeze-card__reflection">{display.whyShort}</p>}
         </div>
       )}
 
