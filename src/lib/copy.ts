@@ -128,6 +128,12 @@ export const COPY = {
     detailRequest: 'Что ты написал(а)',
     detailInsight: 'Разбор',
     detailAnchor: 'Опора',
+    clear: 'Очистить историю',
+    clearConfirmTitle: 'Очистить все записи?',
+    clearConfirmText: 'Запросы и победы исчезнут с этого устройства. Новые шаги можно сделать снова на «Старт».',
+    clearConfirmBtn: 'Да, очистить',
+    clearCancel: 'Отмена',
+    clearing: 'Очищаю…',
   },
 
   outcomes: {

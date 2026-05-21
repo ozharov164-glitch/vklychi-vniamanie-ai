@@ -257,6 +257,13 @@ export async function apiSessionDetail(sessionId: number) {
   })
 }
 
+export async function apiClearHistory() {
+  return post<{ ok: boolean; deleted: number; stats: InitResponse['stats'] }>(
+    '/mini-app/focus/clear-history',
+    {},
+  )
+}
+
 export async function apiTranscribe(audioBase64: string, mimeType: string) {
   return post<{ ok: boolean; text: string }>('/mini-app/focus/transcribe', {
     audioBase64,

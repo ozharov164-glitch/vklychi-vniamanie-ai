@@ -2041,6 +2041,57 @@ body::before {
   font-weight: 600;
 }
 
+.btn-clear-history {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-clear-history:active {
+  color: var(--danger);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.clear-history-panel {
+  margin-top: 0.75rem;
+  padding: 1rem 1.05rem;
+  border-radius: 16px;
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.22);
+}
+
+.clear-history-panel__title {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.clear-history-panel__text {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.clear-history-panel__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.btn-primary--danger {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.35), rgba(248, 113, 113, 0.15));
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+}
+
 .unfreeze-card--hero {
   text-align: center;
 }

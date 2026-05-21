@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { apiHistory } from '../api'
+import { apiClearHistory, apiHistory } from '../api'
 import { WinDetailSheet } from '../components/WinDetailSheet'
 import { COPY } from '../lib/copy'
 import { useAppStore } from '../store'
@@ -23,6 +23,8 @@ export function WinsScreen() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [detailId, setDetailId] = useState<number | null>(null)
+  const [confirmClear, setConfirmClear] = useState(false)
+  const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -46,6 +48,24 @@ export function WinsScreen() {
       cancelled = true
     }
   }, [setHistory, setStats])
+
+  async function onClearHistory() {
+    if (clearing) return
+    setClearing(true)
+    setError('')
+    try {
+      const res = await apiClearHistory()
+      setHistory([])
+      setStats(res.stats)
+      setConfirmClear(false)
+      setDetailId(null)
+      window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('success')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : COPY.errors.save)
+    } finally {
+      setClearing(false)
+    }
+  }
 
   return (
     <motion.div className="screen stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -131,6 +151,46 @@ export function WinsScreen() {
           )
         })}
       </ul>
+
+      {history.length > 0 && !confirmClear && (
+        <button
+          type="button"
+          className="btn-clear-history"
+          disabled={clearing || loading}
+          onClick={() => setConfirmClear(true)}
+        >
+          {COPY.wins.clear}
+        </button>
+      )}
+
+      {confirmClear && (
+        <motion.div
+          className="clear-history-panel"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="clear-history-panel__title">{COPY.wins.clearConfirmTitle}</p>
+          <p className="clear-history-panel__text">{COPY.wins.clearConfirmText}</p>
+          <div className="clear-history-panel__actions">
+            <button
+              type="button"
+              className="btn-primary btn-primary--danger"
+              disabled={clearing}
+              onClick={onClearHistory}
+            >
+              {clearing ? COPY.wins.clearing : COPY.wins.clearConfirmBtn}
+            </button>
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={clearing}
+              onClick={() => setConfirmClear(false)}
+            >
+              {COPY.wins.clearCancel}
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       <WinDetailSheet sessionId={detailId} onClose={() => setDetailId(null)} />
     </motion.div>
