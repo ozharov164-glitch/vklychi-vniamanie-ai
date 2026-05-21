@@ -2740,6 +2740,67 @@ html[data-tg-theme='light'] .insight-line {
   color: var(--text);
 }
 
+.measurable-step-card__ai-badge {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(253, 224, 71, 0.95);
+}
+
+.overload-intro {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+}
+
+.cognitive-blocks {
+  margin-top: 0.25rem;
+}
+
+.cognitive-blocks__title {
+  margin: 0 0 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.cognitive-blocks__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cognitive-blocks__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 3px solid rgba(139, 92, 246, 0.65);
+}
+
+.cognitive-blocks__icon {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.cognitive-blocks__text {
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .overload-banner--auto {
   border-color: rgba(139, 92, 246, 0.4);
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(56, 189, 248, 0.08));

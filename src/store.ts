@@ -1,5 +1,12 @@
 import { create } from 'zustand'
-import type { ActionResponse, FocusHistoryItem, FocusMemoryItem, InitResponse, ThemeChoice } from './api'
+import type {
+  ActionResponse,
+  CognitiveBlock,
+  FocusHistoryItem,
+  FocusMemoryItem,
+  InitResponse,
+  ThemeChoice,
+} from './api'
 
 export type TabId = 'start' | 'wins'
 export type UnfreezeMode = 'stuck' | 'noise'
@@ -30,6 +37,9 @@ export type ActiveSession = {
     later: string[]
     release: string[]
   }
+  cognitiveBlocks: CognitiveBlock[]
+  overloadIntro: string
+  aiChoseForYou: boolean
 }
 
 type AppState = {
@@ -145,7 +155,34 @@ export const useAppStore = create<AppState>((set) => ({
           later: res.later || [],
           release: res.release || [],
         },
+        cognitiveBlocks: normalizeCognitiveBlocks(res),
+        overloadIntro: res.overloadIntro || '',
+        aiChoseForYou: Boolean(res.aiChoseForYou),
       },
     })
   },
 }))
+
+function normalizeCognitiveBlocks(res: ActionResponse): CognitiveBlock[] {
+  const raw = res.cognitiveBlocks
+  if (Array.isArray(raw) && raw.length) {
+    return raw
+      .map((b) => ({
+        icon: String(b?.icon || '⚡').slice(0, 4),
+        text: String(b?.text || '').trim(),
+      }))
+      .filter((b) => b.text.length >= 8)
+      .slice(0, 4)
+  }
+  const release = res.release || []
+  const fallback: CognitiveBlock[] = []
+  for (const item of release) {
+    const parts = String(item)
+      .split(/(?<=[а-яё])\.\s+(?=[А-ЯЁ])|;\s*/)
+      .map((p) => p.trim())
+      .filter((p) => p.length >= 12)
+    const icons = ['⚡', '🧠', '⏳', '🔄'] as const
+    parts.forEach((text, i) => fallback.push({ icon: icons[i % icons.length], text }))
+  }
+  return fallback.slice(0, 4)
+}

@@ -201,10 +201,31 @@ export function UnfreezeResult() {
       {active.userQuote && <p className="user-quote-line">«{active.userQuote}»</p>}
       {active.insight && <p className="insight-line">{active.insight}</p>}
 
+      {active.overloadIntro && (
+        <p className="overload-intro">{active.overloadIntro}</p>
+      )}
+
       <MeasurableMicroStepCard
-        sessionKey={`${active.sessionId}-${displayStep}`}
+        sessionId={active.sessionId}
         step={displayStep}
+        aiChoseForYou={active.aiChoseForYou}
       />
+
+      {active.cognitiveBlocks.length > 0 && (
+        <section className="cognitive-blocks" aria-label="Психологические барьеры">
+          <p className="cognitive-blocks__title">Психологические барьеры</p>
+          <ul className="cognitive-blocks__list">
+            {active.cognitiveBlocks.map((block) => (
+              <li key={`${block.icon}-${block.text.slice(0, 40)}`} className="cognitive-blocks__item">
+                <span className="cognitive-blocks__icon" aria-hidden>
+                  {block.icon}
+                </span>
+                <span className="cognitive-blocks__text">{block.text}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {active.taskLabel && active.taskLabel !== displayStep && !/^[A-Z_]+$/.test(active.taskLabel) && (
         <p className="unfreeze-card__label unfreeze-card__label--below">{active.taskLabel}</p>
@@ -265,7 +286,7 @@ export function UnfreezeResult() {
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
               >
-                {active.buckets.release.length > 0 && (
+                {active.buckets.release.length > 0 && active.cognitiveBlocks.length === 0 && (
                   <Bucket title={COPY.result.bucketRelease} items={active.buckets.release} accent />
                 )}
                 <Bucket title={COPY.result.bucketNow} items={active.buckets.now} />

@@ -136,6 +136,11 @@ export type InitResponse = {
   memory?: FocusMemoryItem[]
 }
 
+export type CognitiveBlock = {
+  icon: string
+  text: string
+}
+
 export type ActionResponse = {
   ok: boolean
   sessionId: number
@@ -158,6 +163,10 @@ export type ActionResponse = {
   today?: string[]
   later?: string[]
   release?: string[]
+  cognitiveBlocks?: CognitiveBlock[]
+  overloadIntro?: string
+  aiChoseForYou?: boolean
+  overloadTaskCount?: number
   lightest?: string
   userQuote?: string
   mechanism?: string
