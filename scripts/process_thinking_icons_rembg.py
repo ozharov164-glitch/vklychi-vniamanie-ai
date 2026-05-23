@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import math
 import sys
 from pathlib import Path
 
@@ -34,6 +35,8 @@ NAMES = (
 
 MAX_SIDE = 384
 PAD = 14
+# Доля радиуса холста, в которую должен влезать объект (круг UI ≈ 116% wrap, √2 для квадрата)
+CIRCLE_FILL = 0.70
 SESSION = "isnet-general-use"
 
 
@@ -68,6 +71,31 @@ def refine_alpha(im: Image.Image) -> Image.Image:
 
     arr[:, :, 3] = np.clip(a, 0, 255)
     return Image.fromarray(arr.astype(np.uint8), "RGBA")
+
+
+def fit_in_circle(im: Image.Image, max_side: int = MAX_SIDE, fill: float = CIRCLE_FILL) -> Image.Image:
+    """Уменьшить объект, чтобы bbox вписывался во внутренний круг (без выступов за кольцо)."""
+    im = fit_square(im, max_side)
+    w, h = im.size
+    bbox = im.getbbox()
+    if not bbox:
+        return im
+    cx, cy = w / 2, h / 2
+    x0, y0, x1, y1 = bbox
+    corners = ((x0, y0), (x1, y0), (x0, y1), (x1, y1))
+    max_r = max(math.hypot(cx - x, cy - y) for x, y in corners)
+    limit = (w / 2) * fill
+    if max_r <= limit:
+        return im
+    scale = limit / max_r
+    nw = max(1, int(w * scale))
+    nh = max(1, int(h * scale))
+    shrunk = im.resize((nw, nh), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    ox = (w - nw) // 2
+    oy = (h - nh) // 2
+    canvas.paste(shrunk, (ox, oy), shrunk)
+    return canvas
 
 
 def fit_square(im: Image.Image, max_side: int = MAX_SIDE) -> Image.Image:
@@ -107,7 +135,7 @@ def process_one(src: Path, dest: Path, session) -> None:
     )
     im = Image.open(io.BytesIO(out_bytes)).convert("RGBA")
     im = refine_alpha(im)
-    im = fit_square(im)
+    im = fit_in_circle(im)
     dest.parent.mkdir(parents=True, exist_ok=True)
     im.save(dest, "PNG", optimize=True)
     print(f"OK {dest.name} {im.size} {dest.stat().st_size} bytes")
