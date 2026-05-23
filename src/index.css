@@ -3039,17 +3039,14 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   margin: 0 auto 0.55rem;
-  background: transparent;
-  border-radius: 0;
-  overflow: visible;
 }
 
 .ai-thinking--compact .ai-thinking__icon-wrap {
-  width: 58px;
-  height: 58px;
+  width: 64px;
+  height: 64px;
   margin-bottom: 0.45rem;
 }
 
@@ -3057,19 +3054,21 @@ body::before {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 1px dashed rgba(139, 92, 246, 0.45);
-  animation: ai-thinking-ring 9s linear infinite;
+  border: 1px dashed rgba(139, 92, 246, 0.5);
+  animation: ai-thinking-ring 12s linear infinite;
   pointer-events: none;
 }
 
-.ai-thinking__icon-fit {
+.ai-thinking__icon-disk {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(100% * 0.88 * var(--icon-fit, 1));
-  height: calc(100% * 0.88 * var(--icon-fit, 1));
+  width: 88%;
+  height: 88%;
+  border-radius: 50%;
+  overflow: hidden;
   transform-origin: center center;
 }
 
@@ -3078,7 +3077,7 @@ body::before {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 8px 22px rgba(139, 92, 246, 0.45));
+  filter: drop-shadow(0 4px 14px rgba(139, 92, 246, 0.35));
 }
 
 .ai-thinking__eyebrow {

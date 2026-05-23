@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from 'react'
+import { useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   buildThinkingPhases,
@@ -6,7 +6,7 @@ import {
   type ThinkingScenario,
 } from '../lib/aiThinkingPhases'
 import { COPY } from '../lib/copy'
-import { thinkingIconFit, thinkingImages } from '../lib/thinkingAssets'
+import { thinkingImages } from '../lib/thinkingAssets'
 import { useAiThinkingProgress } from '../hooks/useAiThinkingProgress'
 
 type Props = {
@@ -33,7 +33,6 @@ export function AiThinkingPanel({
   if (!active || !current) return null
 
   const iconSrc = thinkingImages[current.icon]
-  const iconFit = thinkingIconFit[current.icon] ?? 1
 
   return (
     <motion.div
@@ -53,23 +52,21 @@ export function AiThinkingPanel({
         <span className="ai-thinking__ring" aria-hidden />
         <motion.div
           key={current.id}
-          className="ai-thinking__icon-fit"
-          style={{ '--icon-fit': String(iconFit) } as CSSProperties}
-          initial={{ opacity: 0, scale: 0.82, rotate: -6 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0, y: [0, -4, 0] }}
+          className="ai-thinking__icon-disk"
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1, y: [0, -3, 0] }}
           transition={{
             opacity: { duration: 0.35 },
             scale: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-            rotate: { duration: 0.4 },
-            y: { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: 0.35 },
+            y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 0.3 },
           }}
         >
           <img
             src={iconSrc}
             alt=""
             className="ai-thinking__icon"
-            width={96}
-            height={96}
+            width={80}
+            height={80}
             decoding="async"
             draggable={false}
           />

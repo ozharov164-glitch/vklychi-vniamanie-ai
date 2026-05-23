@@ -25,17 +25,6 @@ export const thinkingImages: Record<ThinkingIconId, string> = {
   regenerate: thinkingRegenerate,
 }
 
-/** Тонкая подгонка под кольцо (1 = после fit_in_circle в скрипте). */
-export const thinkingIconFit: Record<ThinkingIconId, number> = {
-  read: 1,
-  memory: 1,
-  focus: 1,
-  sort: 1,
-  anchor: 1,
-  polish: 1,
-  regenerate: 1,
-}
-
 export const ALL_THINKING_IMAGE_URLS = Object.values(thinkingImages)
 
 let thinkingPreloaded = false
