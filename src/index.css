@@ -3039,6 +3039,9 @@ body::before {
   width: 72px;
   height: 72px;
   margin: 0 auto 0.55rem;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .ai-thinking--compact .ai-thinking__icon-wrap {
