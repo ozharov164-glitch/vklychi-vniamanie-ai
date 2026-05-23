@@ -34,11 +34,11 @@ function Boot() {
     async function run() {
       lockAppViewport()
       const tg = window.Telegram?.WebApp
-      const scheme = tg?.colorScheme || 'dark'
-      document.documentElement.setAttribute('data-tg-theme', scheme)
-      if (tg?.themeParams?.bg_color) {
-        document.documentElement.style.setProperty('--tg-bg', tg.themeParams.bg_color)
-      }
+      document.documentElement.setAttribute('data-tg-theme', 'dark')
+      document.documentElement.style.colorScheme = 'dark'
+      document.documentElement.style.setProperty('--tg-bg', '#060a10')
+      tg?.setHeaderColor?.('#060a10')
+      tg?.setBackgroundColor?.('#060a10')
       tg?.ready?.()
       tg?.expand?.()
 
