@@ -7,6 +7,7 @@ import {
   isClarificationResponse,
   type BlockerId,
 } from '../api'
+import { AiThinkingPanel, resolveThinkingScenario } from '../components/AiThinkingPanel'
 import { ClarifySheet } from '../components/ClarifySheet'
 import { COPY } from '../lib/copy'
 import { useAppStore, type UnfreezeMode } from '../store'
@@ -179,10 +180,12 @@ export function StartScreen() {
 
   const overloadBanner = mode === 'noise' && savedStuckText && isOverload(savedStuckText)
   const hideBlockerChips = mode === 'noise' && (isOverload(text) || Boolean(savedStuckText))
+  const hasMemory = memory.some((m) => Boolean(m.helpWorked?.trim()))
+  const thinkingScenario =
+    mode != null ? resolveThinkingScenario(mode, text) : 'stuck'
 
   function primaryButtonLabel() {
     if (mode === 'noise' || isOverload(text)) {
-      if (loading) return COPY.overload.btnLoading
       return COPY.overload.btnAnalyze
     }
     return COPY.actions.next
@@ -308,18 +311,27 @@ export function StartScreen() {
                 onChange={setText}
                 disabled={loading}
               />
-              <button
-                type="button"
-                className="btn-primary btn-primary--glow"
-                disabled={loading || text.trim().length < 2}
-                onClick={() =>
-                  mode === 'stuck' && !isOverload(text) && !hideBlockerChips
-                    ? setStep('blocker')
-                    : runAction()
-                }
-              >
-                {primaryButtonLabel()}
-              </button>
+              {loading ? (
+                <AiThinkingPanel
+                  active
+                  scenario={thinkingScenario}
+                  premium={premium}
+                  hasMemory={hasMemory}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="btn-primary btn-primary--glow"
+                  disabled={text.trim().length < 2}
+                  onClick={() =>
+                    mode === 'stuck' && !isOverload(text) && !hideBlockerChips
+                      ? setStep('blocker')
+                      : runAction()
+                  }
+                >
+                  {primaryButtonLabel()}
+                </button>
+              )}
             </>
           )}
 
@@ -338,14 +350,22 @@ export function StartScreen() {
                   </button>
                 ))}
               </div>
-              <button
-                type="button"
-                className="btn-primary btn-primary--glow"
-                disabled={loading}
-                onClick={runAction}
-              >
-                {loading ? COPY.actions.pickingStep : COPY.actions.getStep}
-              </button>
+              {loading ? (
+                <AiThinkingPanel
+                  active
+                  scenario={thinkingScenario}
+                  premium={premium}
+                  hasMemory={hasMemory}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="btn-primary btn-primary--glow"
+                  onClick={runAction}
+                >
+                  {COPY.actions.getStep}
+                </button>
+              )}
             </>
           )}
 
@@ -361,6 +381,9 @@ export function StartScreen() {
         question={clarifyQuestion}
         hint={clarifyHint}
         loading={loading}
+        thinkingScenario={thinkingScenario}
+        premium={premium}
+        hasMemory={hasMemory}
         onClose={() => setClarifyOpen(false)}
         onSubmit={submitClarification}
       />

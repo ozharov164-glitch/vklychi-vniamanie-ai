@@ -1,7 +1,8 @@
 import { images } from './assets'
 import splashLogo from '../assets/splash-logo.png'
+import { ALL_THINKING_IMAGE_URLS } from './thinkingAssets'
 
-const ALL_IMAGES = [...new Set([...Object.values(images), splashLogo])]
+const ALL_IMAGES = [...new Set([...Object.values(images), splashLogo, ...ALL_THINKING_IMAGE_URLS])]
 
 export function preloadImages(urls: string[] = ALL_IMAGES): Promise<void> {
   return Promise.all(

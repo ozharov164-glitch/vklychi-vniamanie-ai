@@ -54,6 +54,21 @@ export const COPY = {
     btnLoading: 'Разбираю мысли…',
   },
 
+  thinking: {
+    eyebrow: 'ИИ собирает ответ',
+    read: 'Читаю, что ты написал(а)',
+    readTask: 'Смотрю на задачу',
+    memory: 'Учитываю, что помогало в прошлый раз',
+    focusPain: 'Ищу, что давит сильнее всего',
+    findStep: 'Ищу самый маленький первый шаг',
+    sort: 'Раскладываю мысли по полочкам',
+    anchor: 'Собираю опору на ~1 минуту',
+    polish: 'Проверяю формулировку',
+    regenerateAlt: 'Ищу другую опору — ближе к твоим словам',
+    regenerateAnchor: 'Подбираю шаг конкретнее',
+    stepOf: (current: number, total: number) => `Шаг ${current} из ${total}`,
+  },
+
   blockers: {
     section: 'Что ближе?',
     fear: 'Страшно или тяжело',

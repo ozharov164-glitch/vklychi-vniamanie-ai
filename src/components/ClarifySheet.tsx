@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import type { ThinkingScenario } from '../lib/aiThinkingPhases'
 import { COPY } from '../lib/copy'
+import { AiThinkingPanel } from './AiThinkingPanel'
 import { VoiceTextField } from './VoiceTextField'
 
 type Props = {
@@ -8,11 +10,24 @@ type Props = {
   question: string
   hint: string
   loading?: boolean
+  thinkingScenario?: ThinkingScenario
+  premium?: boolean
+  hasMemory?: boolean
   onClose: () => void
   onSubmit: (detail: string) => void
 }
 
-export function ClarifySheet({ open, question, hint, loading, onClose, onSubmit }: Props) {
+export function ClarifySheet({
+  open,
+  question,
+  hint,
+  loading,
+  thinkingScenario = 'stuck',
+  premium = false,
+  hasMemory = false,
+  onClose,
+  onSubmit,
+}: Props) {
   const [detail, setDetail] = useState('')
 
   useEffect(() => {
@@ -57,19 +72,29 @@ export function ClarifySheet({ open, question, hint, loading, onClose, onSubmit 
               onChange={setDetail}
               disabled={loading}
             />
-            <div className="clarify-sheet__actions">
-              <button
-                type="button"
-                className="btn-primary btn-primary--glow"
-                disabled={loading || detail.trim().length < 2}
-                onClick={() => onSubmit(detail.trim())}
-              >
-                {loading ? COPY.clarify.submitting : COPY.clarify.submit}
-              </button>
-              <button type="button" className="btn-cancel" disabled={loading} onClick={onClose}>
-                {COPY.clarify.close}
-              </button>
-            </div>
+            {loading ? (
+              <AiThinkingPanel
+                active
+                scenario={thinkingScenario}
+                premium={premium}
+                hasMemory={hasMemory}
+                compact
+              />
+            ) : (
+              <div className="clarify-sheet__actions">
+                <button
+                  type="button"
+                  className="btn-primary btn-primary--glow"
+                  disabled={detail.trim().length < 2}
+                  onClick={() => onSubmit(detail.trim())}
+                >
+                  {COPY.clarify.submit}
+                </button>
+                <button type="button" className="btn-cancel" onClick={onClose}>
+                  {COPY.clarify.close}
+                </button>
+              </div>
+            )}
           </motion.div>
         </>
       )}

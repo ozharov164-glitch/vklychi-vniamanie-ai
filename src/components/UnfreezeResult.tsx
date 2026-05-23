@@ -5,6 +5,7 @@ import { apiOutcome, apiRegenerate, type CognitiveBlock, type ThemeChoice } from
 import { COPY } from '../lib/copy'
 import { pickDisplayEcho } from '../lib/displayDedupe'
 import { useAppStore } from '../store'
+import { AiThinkingPanel } from './AiThinkingPanel'
 import { MeasurableMicroStepCard } from './MeasurableMicroStepCard'
 
 let confettiRafId = 0
@@ -56,6 +57,8 @@ function CognitiveBlocksList({ blocks }: { blocks: CognitiveBlock[] }) {
 
 export function UnfreezeResult() {
   const active = useAppStore((s) => s.activeSession)
+  const premium = useAppStore((s) => s.premium)
+  const memory = useAppStore((s) => s.memory)
   const stats = useAppStore((s) => s.stats)
   const aiUsage = useAppStore((s) => s.aiUsage)
   const applyActionResponse = useAppStore((s) => s.applyActionResponse)
@@ -296,7 +299,15 @@ export function UnfreezeResult() {
         </div>
       )}
 
-      {regenerating && <p className="hint-line hint-line--pulse">{COPY.result.regenerating}</p>}
+      {regenerating && (
+        <AiThinkingPanel
+          active
+          scenario="regenerate"
+          premium={premium}
+          hasMemory={memory.some((m) => Boolean(m.helpWorked?.trim()))}
+          compact
+        />
+      )}
       {error && <p className="field-error">{error}</p>}
 
       {hasThemePicker && (
@@ -330,7 +341,7 @@ export function UnfreezeResult() {
         {closePhase === 'idle' && (
           <>
             <button type="button" className="btn-not-help" disabled={busy} onClick={onNotHelpful}>
-              {regenerating ? COPY.result.notHelpLoading : COPY.result.notHelp}
+              {COPY.result.notHelp}
             </button>
             <button type="button" className="btn-primary" disabled={busy} onClick={() => setClosePhase('help')}>
               {COPY.result.done}
