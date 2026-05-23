@@ -74,7 +74,7 @@ export const useAppStore = create<AppState>((set) => ({
   ready: false,
   premium: false,
   ownerUnlimited: false,
-  aiUsage: { aiUsedToday: 0, hintsLimit: 12 },
+  aiUsage: { aiUsedToday: 0, hintsLimit: 6 },
   stats: {
     sessionsToday: 0,
     winsTotal: 0,

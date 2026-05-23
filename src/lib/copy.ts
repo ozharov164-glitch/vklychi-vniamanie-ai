@@ -90,7 +90,7 @@ export const COPY = {
     priorityApplied: 'Опора обновлена',
     bucketsLabel: (n: number) => {
       const w = n === 1 ? 'пункт' : n < 5 ? 'пункта' : 'пунктов'
-      return `Разбор: ${n} ${w}`
+      return `Разбор · отпустить: ${n} ${w}`
     },
     bucketRelease: 'Отпустить — не твоя работа сейчас',
     bucketNow: 'Опора сейчас',
