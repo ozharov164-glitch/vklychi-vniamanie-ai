@@ -18,11 +18,11 @@ export function MeasurableMicroStepCard({ step, sessionId, aiChoseForYou }: Prop
   useEffect(() => {
     if (sessionRef.current !== sessionId) {
       sessionRef.current = sessionId
-      setDone(false)
-      setShowDoneAction(false)
-      setPulseAnim(false)
     }
-  }, [sessionId])
+    setDone(false)
+    setShowDoneAction(false)
+    setPulseAnim(false)
+  }, [sessionId, step])
 
   const markDone = useCallback(() => {
     setDone(true)
