@@ -80,7 +80,7 @@ export function UnfreezeResult() {
 
   useEffect(() => {
     return () => {
-      if (confettiRafId) cancelAnimationFrame(confettiRafId)
+      // Конфетти не отменяем при размонтировании — после «Сдвинулось» сессия сбрасывается сразу.
       if (toastTimer.current) window.clearTimeout(toastTimer.current)
     }
   }, [])
@@ -172,8 +172,13 @@ export function UnfreezeResult() {
     try {
       const res = await apiOutcome(active.sessionId, outcome, helpWorked)
       setStats(res.stats)
-      if (outcome === 'done') fireLightConfetti()
-      setActiveSession(null)
+      if (outcome === 'done') {
+        fireLightConfetti()
+        // Даём первому кадру конфетти отрисоваться до сброса экрана разбора.
+        requestAnimationFrame(() => requestAnimationFrame(() => setActiveSession(null)))
+      } else {
+        setActiveSession(null)
+      }
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
     } catch (e) {
       setError(e instanceof Error ? e.message : COPY.errors.save)
