@@ -3036,23 +3036,71 @@ body::before {
 .ai-thinking__icon-wrap {
   position: relative;
   z-index: 1;
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 96px;
   margin: 0 auto 0.55rem;
 }
 
 .ai-thinking--compact .ai-thinking__icon-wrap {
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   margin-bottom: 0.45rem;
 }
 
+.ai-thinking__icon-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-top-color: rgba(167, 139, 250, 0.85);
+  border-right-color: rgba(56, 189, 248, 0.35);
+  box-shadow:
+    0 0 18px rgba(139, 92, 246, 0.35),
+    inset 0 0 12px rgba(139, 92, 246, 0.12);
+  animation: ai-thinking-ring-spin 3.2s linear infinite;
+  pointer-events: none;
+}
+
+.ai-thinking__icon-ring--reverse {
+  inset: 6px;
+  border-top-color: rgba(56, 189, 248, 0.7);
+  border-right-color: rgba(232, 184, 74, 0.25);
+  opacity: 0.75;
+  animation-direction: reverse;
+  animation-duration: 4.6s;
+}
+
+@keyframes ai-thinking-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .ai-thinking__icon {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 8px 22px rgba(139, 92, 246, 0.45));
+  filter:
+    drop-shadow(0 10px 26px rgba(139, 92, 246, 0.5))
+    drop-shadow(0 0 14px rgba(56, 189, 248, 0.22));
+  animation: ai-thinking-icon-breathe 2.8s ease-in-out infinite;
+}
+
+@keyframes ai-thinking-icon-breathe {
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 10px 26px rgba(139, 92, 246, 0.5))
+      drop-shadow(0 0 14px rgba(56, 189, 248, 0.22));
+  }
+  50% {
+    filter:
+      drop-shadow(0 12px 32px rgba(139, 92, 246, 0.62))
+      drop-shadow(0 0 20px rgba(56, 189, 248, 0.34));
+  }
 }
 
 .ai-thinking__eyebrow {

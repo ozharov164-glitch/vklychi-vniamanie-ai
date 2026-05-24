@@ -49,6 +49,8 @@ export function AiThinkingPanel({
       <div className="ai-thinking__grid" aria-hidden />
 
       <div className="ai-thinking__icon-wrap">
+        <span className="ai-thinking__icon-ring" aria-hidden />
+        <span className="ai-thinking__icon-ring ai-thinking__icon-ring--reverse" aria-hidden />
         <motion.img
           key={current.id}
           src={iconSrc}
@@ -58,12 +60,13 @@ export function AiThinkingPanel({
           height={88}
           decoding="async"
           draggable={false}
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={{ opacity: 1, scale: 1, y: [0, -4, 0] }}
+          initial={{ opacity: 0, scale: 0.82, rotate: -8 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0, y: [0, -5, 0] }}
           transition={{
-            opacity: { duration: 0.35 },
-            scale: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-            y: { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: 0.35 },
+            opacity: { duration: 0.38 },
+            scale: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+            rotate: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+            y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 0.4 },
           }}
         />
       </div>
