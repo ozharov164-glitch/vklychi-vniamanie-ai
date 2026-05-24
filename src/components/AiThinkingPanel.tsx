@@ -52,7 +52,6 @@ export function AiThinkingPanel({
         <span className="ai-thinking__icon-ring" aria-hidden />
         <span className="ai-thinking__icon-ring ai-thinking__icon-ring--reverse" aria-hidden />
         <div className="ai-thinking__icon-stage">
-          <span className="ai-thinking__icon-halo" aria-hidden />
           <AnimatePresence mode="wait">
             <motion.img
               key={current.id}
@@ -64,9 +63,9 @@ export function AiThinkingPanel({
               decoding="sync"
               fetchPriority="high"
               draggable={false}
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
             />
           </AnimatePresence>
