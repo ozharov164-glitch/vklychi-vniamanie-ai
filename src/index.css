@@ -3065,21 +3065,24 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
+  width: 72%;
+  height: 72%;
   border-radius: 50%;
   overflow: hidden;
   transform-origin: center center;
+  isolation: isolate;
 }
 
 .ai-thinking__icon {
   display: block;
-  width: 108%;
-  height: 108%;
+  width: 100%;
+  height: 100%;
   max-width: none;
+  opacity: 1;
   object-fit: contain;
   object-position: center;
-  filter: drop-shadow(0 4px 16px rgba(139, 92, 246, 0.4));
+  image-rendering: auto;
+  filter: drop-shadow(0 2px 8px rgba(139, 92, 246, 0.22));
 }
 
 .ai-thinking__eyebrow {
