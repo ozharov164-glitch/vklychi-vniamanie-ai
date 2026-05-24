@@ -35,7 +35,8 @@ export function preloadThinkingImages(): void {
   thinkingPreloaded = true
   for (const url of ALL_THINKING_IMAGE_URLS) {
     const img = new Image()
-    img.decoding = 'async'
+    img.decoding = 'sync'
+    img.fetchPriority = 'high'
     img.src = url
   }
 }

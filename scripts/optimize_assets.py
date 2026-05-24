@@ -110,8 +110,8 @@ def main() -> None:
             src_splash = Path(tmp.name)
     optimize_splash(src_splash)
     for name, side in (
-        ("icon-mode-stuck.png", 128),
-        ("icon-mode-noise.png", 128),
+        ("mode-stuck.png", 128),
+        ("mode-noise.png", 128),
         ("icon-tab-unfreeze.png", 64),
         ("icon-tab-wins.png", 64),
     ):
