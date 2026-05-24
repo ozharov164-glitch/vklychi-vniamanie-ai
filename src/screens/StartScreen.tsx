@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   apiBrainDump,
@@ -61,17 +61,13 @@ export function StartScreen() {
   const [step, setStep] = useState<Step>(activeSession ? 'result' : 'pick')
   const [mode, setMode] = useState<UnfreezeMode | null>(activeSession?.mode ?? null)
   const [text, setText] = useState('')
-  const [savedStuckText, setSavedStuckText] = useState('')
   const [blocker, setBlocker] = useState<BlockerId>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [modeSwitchAnim, setModeSwitchAnim] = useState(false)
   const [clarifyOpen, setClarifyOpen] = useState(false)
   const [clarifyQuestion, setClarifyQuestion] = useState('')
   const [clarifyHint, setClarifyHint] = useState('')
   const [pendingBaseText, setPendingBaseText] = useState('')
-  const overloadHandled = useRef(false)
-
   const totalStarts = stats.winsTotal + stats.sessionsToday
   const showEncouragement = totalStarts >= 3
 
@@ -81,23 +77,8 @@ export function StartScreen() {
       setMode(null)
       setText('')
       setBlocker('')
-      setSavedStuckText('')
-      overloadHandled.current = false
     }
   }, [activeSession, step])
-
-  useEffect(() => {
-    if (mode !== 'stuck' || step !== 'input') return
-    if (!isOverload(text) || text.trim().length < 2) return
-    if (overloadHandled.current) return
-    overloadHandled.current = true
-    setSavedStuckText(text)
-    setModeSwitchAnim(true)
-    setMode('noise')
-    window.Telegram?.WebApp.HapticFeedback?.notificationOccurred('warning')
-    const t = window.setTimeout(() => setModeSwitchAnim(false), 1200)
-    return () => window.clearTimeout(t)
-  }, [text, mode, step])
 
   if (activeSession || step === 'result') {
     return (
@@ -122,11 +103,10 @@ export function StartScreen() {
     setError('')
     try {
       let res
-      const useBrainDump = mode === 'noise' || isOverload(payload)
       const postOpts = opts?.clarificationFollowUp
         ? { clarificationFollowUp: true }
         : undefined
-      if (useBrainDump) {
+      if (mode === 'noise') {
         res = await apiBrainDump(payload, postOpts)
       } else if (isClearTask(payload)) {
         res = await apiTaskSteps(payload, fearFromBlocker(blocker), blocker, postOpts)
@@ -142,7 +122,7 @@ export function StartScreen() {
         return
       }
       if (res.aiUsage) setAiUsage(res.aiUsage)
-      applyActionResponse(res, useBrainDump ? 'noise' : mode)
+      applyActionResponse(res, mode)
       setClarifyOpen(false)
       setStep('result')
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('medium')
@@ -174,18 +154,15 @@ export function StartScreen() {
     setText('')
     setBlocker('')
     setError('')
-    setSavedStuckText('')
-    overloadHandled.current = false
   }
 
-  const overloadBanner = mode === 'noise' && savedStuckText && isOverload(savedStuckText)
-  const hideBlockerChips = mode === 'noise' && (isOverload(text) || Boolean(savedStuckText))
+  const hideBlockerChips = mode === 'noise' && isOverload(text)
   const hasMemory = memory.some((m) => Boolean(m.helpWorked?.trim()))
   const thinkingScenario =
     mode != null ? resolveThinkingScenario(mode, text) : 'stuck'
 
   function primaryButtonLabel() {
-    if (mode === 'noise' || isOverload(text)) {
+    if (mode === 'noise') {
       return COPY.overload.btnAnalyze
     }
     return COPY.actions.next
@@ -238,7 +215,6 @@ export function StartScreen() {
               onClick={() => {
                 setMode('stuck')
                 setStep('input')
-                overloadHandled.current = false
               }}
             >
               <ModeIcon mode="stuck" />
@@ -251,7 +227,6 @@ export function StartScreen() {
               onClick={() => {
                 setMode('noise')
                 setStep('input')
-                overloadHandled.current = false
               }}
             >
               <ModeIcon mode="noise" />
@@ -271,7 +246,7 @@ export function StartScreen() {
           <AnimatePresence mode="wait">
             <motion.div
               key={mode}
-              className={`mode-input-head${modeSwitchAnim ? ' mode-input-head--switch' : ''}`}
+              className="mode-input-head"
               initial={{ opacity: 0, x: mode === 'noise' ? 12 : -12 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0 }}
@@ -287,21 +262,6 @@ export function StartScreen() {
 
           {step === 'input' && (
             <>
-              {(overloadBanner || modeSwitchAnim) && (
-                <motion.div
-                  className="overload-banner overload-banner--auto"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <p className="overload-banner__title">{COPY.overload.autoSwitch}</p>
-                  {savedStuckText && (
-                    <p className="overload-banner__text hint-line--tight">
-                      Исходный текст сохранён — после разбора можно вернуться к задаче.
-                    </p>
-                  )}
-                </motion.div>
-              )}
-
               <VoiceTextField
                 id="focus-input"
                 multiline

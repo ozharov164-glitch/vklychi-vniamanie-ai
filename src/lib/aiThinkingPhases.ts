@@ -79,13 +79,8 @@ export function buildThinkingPhases(scenario: ThinkingScenario, opts: BuildOpts)
 
 export function resolveThinkingScenario(
   mode: 'stuck' | 'noise' | null,
-  text: string,
+  _text: string,
 ): ThinkingScenario {
   if (mode === 'noise') return 'noise'
-  if (/(алкогол|зависим|предательств|разрыв|девушк|навалил|перегруз|кризис|мести|вина|устал|без\s*сил|тревог|паник|выгор|не\s*могу|бросить|плач)/i.test(
-    text,
-  )) {
-    return 'noise'
-  }
   return 'stuck'
 }

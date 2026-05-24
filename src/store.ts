@@ -147,8 +147,7 @@ export const useAppStore = create<AppState>((set) => ({
         themeChoices: choices,
         powerLine: res.powerLine || '',
         powerAuthor: res.powerAuthor || '',
-        showBuckets:
-          effectiveMode === 'noise' || Boolean((res.now?.length || 0) + (res.release?.length || 0)),
+        showBuckets: effectiveMode === 'noise',
         buckets: {
           now: res.now || [],
           today: res.today || [],
