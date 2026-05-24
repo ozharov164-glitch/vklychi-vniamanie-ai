@@ -99,7 +99,7 @@ export const COPY = {
   result: {
     anchorEyebrow: 'Опора сейчас',
     whyEyebrow: 'Разбор опоры',
-    whyToggleOpen: 'Зачем именно это',
+    whyToggleOpen: 'Почему именно это',
     whyToggleClose: 'Скрыть',
     priorityTitle: 'Что важнее сейчас?',
     priorityHint: 'Нажми другую тему — опора обновится без нового запроса к ИИ.',
@@ -117,7 +117,7 @@ export const COPY = {
     notHelp: 'Не подходит — подобрать другую опору',
     notHelpLoading: 'Ищу другую опору…',
     done: 'Сдвинулось — твой ход, штурман!',
-    motivationEyebrow: 'Зачем это сработает',
+    motivationEyebrow: 'Почему это сработает',
     alternatesShow: 'Другая опора из разбора',
     alternatesHide: 'Скрыть другие опоры',
     saveAndExit: 'Сохранить разбор и выйти',
@@ -130,10 +130,10 @@ export const COPY = {
     measurableCaption: 'Шаг на одну минуту',
     measurableHint: 'Это можно сделать за одну минуту',
     measurableDone: 'Сделал(а)',
-    measurableTag: 'Микро-шаг',
+    measurableTag: 'Микрошаг',
     themeAlreadyActive: 'Это уже твоя текущая опора',
     todayProgressLabel: (done: number, total: number) =>
-      `Сегодня: ${done}/${total} микро-шагов`,
+      `Сегодня: ${done}/${total} микрошагов`,
   },
 
   helpWorked: [
@@ -152,8 +152,8 @@ export const COPY = {
     empty1: 'Пока пусто — и это нормально.',
     empty2: 'Сделай первый шаг на вкладке «Старт».',
     helped: 'Что помогло:',
-    microStepTag: 'Микро-шаг',
-    microStepsTotal: 'микро-шагов создано',
+    microStepTag: 'Микрошаг',
+    microStepsTotal: 'микрошагов создано',
     completionPct: 'завершено',
     streak: 'дней подряд',
     streakLabel: (days: number) => {

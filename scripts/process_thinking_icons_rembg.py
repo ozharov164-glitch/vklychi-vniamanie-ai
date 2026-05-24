@@ -81,8 +81,20 @@ def process_one(src: Path, dest: Path, session) -> None:
     work = upscale_work(Image.open(src).convert("RGBA"))
     buf = io.BytesIO()
     work.save(buf, format="PNG")
-    cut = Image.open(io.BytesIO(rembg_remove(buf.getvalue(), session=session))).convert("RGBA")
+    cut = Image.open(
+        io.BytesIO(
+            rembg_remove(
+                buf.getvalue(),
+                session=session,
+                alpha_matting=True,
+                alpha_matting_foreground_threshold=250,
+                alpha_matting_background_threshold=15,
+                alpha_matting_erode_size=9,
+            )
+        )
+    ).convert("RGBA")
     im = finalize_icon(place_on_canvas(cut))
+    im = finalize_icon(im)
     dest.parent.mkdir(parents=True, exist_ok=True)
     im.save(dest, "PNG", optimize=True, compress_level=6)
     a = np.asarray(im.split()[3])
