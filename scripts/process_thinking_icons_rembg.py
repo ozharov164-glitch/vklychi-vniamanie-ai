@@ -12,12 +12,15 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image
 
 try:
     from rembg import new_session, remove as rembg_remove
 except ImportError:
     sys.exit("pip install rembg pillow numpy onnxruntime")
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from thinking_alpha_utils import enhance_neon, strip_matte  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = Path(
@@ -35,7 +38,8 @@ ITEMS: tuple[tuple[str, str], ...] = (
     ("thinking-regenerate-circle.png", "thinking-regenerate.webp"),
 )
 
-WEBP_QUALITY = 94
+WEBP_QUALITY = 96
+WEBP_LOSSLESS = False
 
 WORK_MIN = 1536
 CANVAS = 512
@@ -76,32 +80,6 @@ def clean_cutout(im: Image.Image) -> Image.Image:
     a[neon] = np.clip(a[neon] + 24, 0, 255)
 
     arr[:, :, 3] = a.astype(np.uint8)
-    return Image.fromarray(arr, "RGBA")
-
-
-def enhance_rgb(im: Image.Image) -> Image.Image:
-    """Контраст и резкость только по неону, фон остаётся прозрачным."""
-    arr = np.array(im.convert("RGBA"), dtype=np.uint8)
-    a = arr[:, :, 3]
-    mask = a > 40
-    if not mask.any():
-        return im
-
-    rgb = arr[:, :, :3].astype(np.float32)
-    lum = rgb.max(axis=2)
-    chroma = spread = (
-        np.abs(rgb[:, :, 0] - rgb[:, :, 1])
-        + np.abs(rgb[:, :, 1] - rgb[:, :, 2])
-        + np.abs(rgb[:, :, 0] - rgb[:, :, 2])
-    )
-    glow = mask & ((lum > 45) | (spread > 28))
-    rgb[glow] = np.clip(rgb[glow] * 1.08 + 6, 0, 255)
-
-    out = Image.fromarray(arr, "RGBA")
-    sharp_rgb = ImageEnhance.Sharpness(out.convert("RGB")).enhance(1.35)
-    sharp_rgb = sharp_rgb.filter(ImageFilter.UnsharpMask(radius=1.1, percent=165, threshold=1))
-    sr = np.array(sharp_rgb, dtype=np.uint8)
-    arr[:, :, :3] = np.where(mask[..., None], sr, arr[:, :, :3])
     return Image.fromarray(arr, "RGBA")
 
 
@@ -160,20 +138,16 @@ def place_on_canvas(im: Image.Image) -> Image.Image:
     return out
 
 
-def prune_alpha_noise(im: Image.Image) -> Image.Image:
-    """Убираем полупрозрачный шум — меньше вес PNG и чётче края."""
-    arr = np.array(im.convert("RGBA"), dtype=np.uint8)
-    a = arr[:, :, 3]
-    a[a < 14] = 0
-    a[(a > 0) & (a < 36)] = np.minimum(a[(a > 0) & (a < 36)], 24)
-    arr[:, :, 3] = a
-    return Image.fromarray(arr, "RGBA")
-
-
 def save_optimized(im: Image.Image, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     if dest.suffix.lower() == ".webp":
-        im.save(dest, "WEBP", quality=WEBP_QUALITY, method=6, lossless=False)
+        im.save(
+            dest,
+            "WEBP",
+            quality=WEBP_QUALITY,
+            method=6,
+            lossless=WEBP_LOSSLESS,
+        )
         return
     im.save(dest, "PNG", optimize=True, compress_level=9)
 
@@ -185,10 +159,11 @@ def process_one(src: Path, dest: Path, session) -> None:
     cut_bytes = rembg_remove(buf.getvalue(), session=session, alpha_matting=False)
     im = Image.open(io.BytesIO(cut_bytes)).convert("RGBA")
     im = clean_cutout(im)
-    im = enhance_rgb(im)
+    im = strip_matte(im)
+    im = enhance_neon(im)
     im = downscale_chain(im, CANVAS)
     im = place_on_canvas(im)
-    im = prune_alpha_noise(im)
+    im = strip_matte(im)
     save_optimized(im, dest)
     a = np.asarray(im.split()[3])
     vis = 100.0 * (a > 48).sum() / a.size

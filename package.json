@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "VITE_BUILD_ID=20260524-thinking-hq-display vite build",
+    "build": "VITE_BUILD_ID=20260524-thinking-alpha-fix vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
