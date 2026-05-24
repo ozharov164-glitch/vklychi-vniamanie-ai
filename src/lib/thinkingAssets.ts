@@ -1,10 +1,10 @@
-import thinkingRead from '../assets/thinking/thinking-read.png'
-import thinkingMemory from '../assets/thinking/thinking-memory.png'
-import thinkingFocus from '../assets/thinking/thinking-focus.png'
-import thinkingSort from '../assets/thinking/thinking-sort.png'
-import thinkingAnchor from '../assets/thinking/thinking-anchor.png'
-import thinkingPolish from '../assets/thinking/thinking-polish.png'
-import thinkingRegenerate from '../assets/thinking/thinking-regenerate.png'
+import thinkingRead from '../assets/thinking/thinking-read.webp'
+import thinkingMemory from '../assets/thinking/thinking-memory.webp'
+import thinkingFocus from '../assets/thinking/thinking-focus.webp'
+import thinkingSort from '../assets/thinking/thinking-sort.webp'
+import thinkingAnchor from '../assets/thinking/thinking-anchor.webp'
+import thinkingPolish from '../assets/thinking/thinking-polish.webp'
+import thinkingRegenerate from '../assets/thinking/thinking-regenerate.webp'
 
 export type ThinkingIconId =
   | 'read'

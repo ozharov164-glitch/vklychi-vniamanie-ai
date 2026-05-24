@@ -3083,9 +3083,12 @@ body::before {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   filter:
-    drop-shadow(0 10px 26px rgba(139, 92, 246, 0.5))
-    drop-shadow(0 0 14px rgba(56, 189, 248, 0.22));
+    drop-shadow(0 3px 10px rgba(139, 92, 246, 0.42))
+    drop-shadow(0 0 6px rgba(56, 189, 248, 0.18));
   animation: ai-thinking-icon-breathe 2.8s ease-in-out infinite;
 }
 
@@ -3093,13 +3096,13 @@ body::before {
   0%,
   100% {
     filter:
-      drop-shadow(0 10px 26px rgba(139, 92, 246, 0.5))
-      drop-shadow(0 0 14px rgba(56, 189, 248, 0.22));
+      drop-shadow(0 3px 10px rgba(139, 92, 246, 0.42))
+      drop-shadow(0 0 6px rgba(56, 189, 248, 0.18));
   }
   50% {
     filter:
-      drop-shadow(0 12px 32px rgba(139, 92, 246, 0.62))
-      drop-shadow(0 0 20px rgba(56, 189, 248, 0.34));
+      drop-shadow(0 4px 14px rgba(139, 92, 246, 0.52))
+      drop-shadow(0 0 9px rgba(56, 189, 248, 0.26));
   }
 }
 

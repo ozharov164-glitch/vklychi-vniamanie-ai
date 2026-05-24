@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Оригинальные chat-логотипы (thinking-*-circle.png) → прозрачный PNG для панели.
-Один проход isnet, без matting; убираем чёрный фон и «иконку-плашку», оставляем неон.
+thinking-*-circle.png → прозрачный PNG HQ для панели ожидания ИИ.
+
+Пайплайн: upscale → rembg (alpha matting) → неон/резкость → downscale-chain → pngquant.
 """
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageFilter
 
 try:
     from rembg import new_session, remove as rembg_remove
@@ -25,17 +26,20 @@ SRC_DIR = Path(
 OUT_DIR = ROOT / "src" / "assets" / "thinking"
 
 ITEMS: tuple[tuple[str, str], ...] = (
-    ("thinking-read-circle.png", "thinking-read.png"),
-    ("thinking-memory-circle.png", "thinking-memory.png"),
-    ("thinking-focus-circle.png", "thinking-focus.png"),
-    ("thinking-sort-circle.png", "thinking-sort.png"),
-    ("thinking-anchor-circle.png", "thinking-anchor.png"),
-    ("thinking-polish-circle.png", "thinking-polish.png"),
-    ("thinking-regenerate-circle.png", "thinking-regenerate.png"),
+    ("thinking-read-circle.png", "thinking-read.webp"),
+    ("thinking-memory-circle.png", "thinking-memory.webp"),
+    ("thinking-focus-circle.png", "thinking-focus.webp"),
+    ("thinking-sort-circle.png", "thinking-sort.webp"),
+    ("thinking-anchor-circle.png", "thinking-anchor.webp"),
+    ("thinking-polish-circle.png", "thinking-polish.webp"),
+    ("thinking-regenerate-circle.png", "thinking-regenerate.webp"),
 )
 
+WEBP_QUALITY = 94
+
+WORK_MIN = 1536
 CANVAS = 512
-CONTENT_MAX = int(CANVAS * 0.78)
+CONTENT_RATIO = 0.82
 SESSION = "isnet-general-use"
 
 
@@ -50,29 +54,63 @@ def _stats(arr: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return rgb, lum, spread
 
 
+def upscale_work(im: Image.Image) -> Image.Image:
+    w, h = im.size
+    m = max(w, h)
+    if m >= WORK_MIN:
+        return im
+    scale = WORK_MIN / m
+    nw, nh = int(w * scale), int(h * scale)
+    return im.resize((nw, nh), Image.Resampling.LANCZOS)
+
+
 def clean_cutout(im: Image.Image) -> Image.Image:
     arr = np.array(im.convert("RGBA"), dtype=np.uint8)
     rgb, lum, spread = _stats(arr)
     a = arr[:, :, 3].astype(np.int16)
 
-    # Чистый чёрный и тёмная заливка плашки
-    a[(lum < 42) & (spread < 44)] = 0
-    # Мутный ореол rembg
-    a[(a > 0) & (a < 110) & (lum < 54) & (spread < 42)] = 0
-    # Неон / стекло — плотнее
-    neon = (a > 16) & ((lum > 58) | (spread > 36))
-    a[neon] = np.clip(a[neon] + 30, 0, 255)
+    a[(lum < 38) & (spread < 48)] = 0
+    a[(a > 0) & (a < 100) & (lum < 50) & (spread < 40)] = 0
+
+    neon = (a > 12) & ((lum > 52) | (spread > 32))
+    a[neon] = np.clip(a[neon] + 24, 0, 255)
 
     arr[:, :, 3] = a.astype(np.uint8)
     return Image.fromarray(arr, "RGBA")
 
 
+def enhance_rgb(im: Image.Image) -> Image.Image:
+    """Контраст и резкость только по неону, фон остаётся прозрачным."""
+    arr = np.array(im.convert("RGBA"), dtype=np.uint8)
+    a = arr[:, :, 3]
+    mask = a > 40
+    if not mask.any():
+        return im
+
+    rgb = arr[:, :, :3].astype(np.float32)
+    lum = rgb.max(axis=2)
+    chroma = spread = (
+        np.abs(rgb[:, :, 0] - rgb[:, :, 1])
+        + np.abs(rgb[:, :, 1] - rgb[:, :, 2])
+        + np.abs(rgb[:, :, 0] - rgb[:, :, 2])
+    )
+    glow = mask & ((lum > 45) | (spread > 28))
+    rgb[glow] = np.clip(rgb[glow] * 1.08 + 6, 0, 255)
+
+    out = Image.fromarray(arr, "RGBA")
+    sharp_rgb = ImageEnhance.Sharpness(out.convert("RGB")).enhance(1.35)
+    sharp_rgb = sharp_rgb.filter(ImageFilter.UnsharpMask(radius=1.1, percent=165, threshold=1))
+    sr = np.array(sharp_rgb, dtype=np.uint8)
+    arr[:, :, :3] = np.where(mask[..., None], sr, arr[:, :, :3])
+    return Image.fromarray(arr, "RGBA")
+
+
 def crop_subject(im: Image.Image) -> Image.Image:
     a = np.asarray(im.split()[3])
-    for thr in (96, 72, 48):
+    for thr in (110, 80, 56):
         ys, xs = np.where(a >= thr)
-        if xs.size >= 20:
-            pad = 8
+        if xs.size >= 24:
+            pad = max(10, int(min(im.size) * 0.012))
             return im.crop(
                 (
                     max(0, int(xs.min()) - pad),
@@ -87,10 +125,34 @@ def crop_subject(im: Image.Image) -> Image.Image:
     return im.crop(box)
 
 
+def downscale_chain(im: Image.Image, target: int) -> Image.Image:
+    w, h = im.size
+    m = max(w, h)
+    if m <= target:
+        return im
+    cur = im
+    while max(cur.size) > target * 1.35:
+        m = max(cur.size)
+        n = max(target, int(m * 0.72))
+        ratio = n / m
+        cur = cur.resize(
+            (max(1, int(cur.width * ratio)), max(1, int(cur.height * ratio))),
+            Image.Resampling.LANCZOS,
+        )
+    if max(cur.size) != target:
+        ratio = target / max(cur.size)
+        cur = cur.resize(
+            (max(1, int(cur.width * ratio)), max(1, int(cur.height * ratio))),
+            Image.Resampling.LANCZOS,
+        )
+    return cur
+
+
 def place_on_canvas(im: Image.Image) -> Image.Image:
     im = crop_subject(im)
+    content_max = int(CANVAS * CONTENT_RATIO)
     w, h = im.size
-    scale = CONTENT_MAX / max(w, h)
+    scale = content_max / max(w, h)
     nw, nh = max(1, int(w * scale)), max(1, int(h * scale))
     im = im.resize((nw, nh), Image.Resampling.LANCZOS)
     out = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
@@ -98,14 +160,39 @@ def place_on_canvas(im: Image.Image) -> Image.Image:
     return out
 
 
-def process_one(src: Path, dest: Path, session) -> None:
-    cut = rembg_remove(src.read_bytes(), session=session, alpha_matting=False)
-    im = place_on_canvas(clean_cutout(Image.open(io.BytesIO(cut)).convert("RGBA")))
+def prune_alpha_noise(im: Image.Image) -> Image.Image:
+    """Убираем полупрозрачный шум — меньше вес PNG и чётче края."""
+    arr = np.array(im.convert("RGBA"), dtype=np.uint8)
+    a = arr[:, :, 3]
+    a[a < 14] = 0
+    a[(a > 0) & (a < 36)] = np.minimum(a[(a > 0) & (a < 36)], 24)
+    arr[:, :, 3] = a
+    return Image.fromarray(arr, "RGBA")
+
+
+def save_optimized(im: Image.Image, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
+    if dest.suffix.lower() == ".webp":
+        im.save(dest, "WEBP", quality=WEBP_QUALITY, method=6, lossless=False)
+        return
     im.save(dest, "PNG", optimize=True, compress_level=9)
+
+
+def process_one(src: Path, dest: Path, session) -> None:
+    work = upscale_work(Image.open(src).convert("RGBA"))
+    buf = io.BytesIO()
+    work.save(buf, format="PNG")
+    cut_bytes = rembg_remove(buf.getvalue(), session=session, alpha_matting=False)
+    im = Image.open(io.BytesIO(cut_bytes)).convert("RGBA")
+    im = clean_cutout(im)
+    im = enhance_rgb(im)
+    im = downscale_chain(im, CANVAS)
+    im = place_on_canvas(im)
+    im = prune_alpha_noise(im)
+    save_optimized(im, dest)
     a = np.asarray(im.split()[3])
     vis = 100.0 * (a > 48).sum() / a.size
-    print(f"OK {dest.name} {dest.stat().st_size // 1024}KB vis={vis:.1f}%", flush=True)
+    print(f"OK {dest.name} {dest.stat().st_size // 1024}KB {CANVAS}px vis={vis:.1f}%", flush=True)
 
 
 def main() -> None:
@@ -116,7 +203,7 @@ def main() -> None:
     if missing:
         sys.exit(f"Нет исходников: {', '.join(missing)}")
 
-    print(f"load {SESSION}", flush=True)
+    print(f"load {SESSION} work>={WORK_MIN} out={CANVAS}px", flush=True)
     session = new_session(SESSION)
     for src, out in ITEMS:
         if args.only and out != args.only:

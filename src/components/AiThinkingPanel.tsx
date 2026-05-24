@@ -56,9 +56,10 @@ export function AiThinkingPanel({
           src={iconSrc}
           alt=""
           className="ai-thinking__icon"
-          width={88}
-          height={88}
+          width={96}
+          height={96}
           decoding="async"
+          fetchPriority="high"
           draggable={false}
           initial={{ opacity: 0, scale: 0.82, rotate: -8 }}
           animate={{ opacity: 1, scale: 1, rotate: 0, y: [0, -5, 0] }}
