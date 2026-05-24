@@ -65,7 +65,7 @@ export function MeasurableMicroStepCard({ step, sessionId, aiChoseForYou }: Prop
         <img src={images.flashStep} alt="" width={32} height={32} />
       </div>
       {aiChoseForYou && (
-        <p className="measurable-step-card__ai-badge">⭐ AI выбрал за тебя</p>
+        <p className="measurable-step-card__ai-badge">⭐ {COPY.measurableAiBadge}</p>
       )}
       <p className="measurable-step-card__caption">{COPY.result.measurableCaption}</p>
       <motion.p
