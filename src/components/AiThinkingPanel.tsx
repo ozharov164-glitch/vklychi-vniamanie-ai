@@ -51,28 +51,26 @@ export function AiThinkingPanel({
       <div className="ai-thinking__icon-wrap">
         <span className="ai-thinking__icon-ring" aria-hidden />
         <span className="ai-thinking__icon-ring ai-thinking__icon-ring--reverse" aria-hidden />
-        <motion.div
-          key={current.id}
-          className="ai-thinking__icon-stage"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, y: [0, -4, 0] }}
-          transition={{
-            opacity: { duration: 0.32 },
-            y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 0.25 },
-          }}
-        >
+        <div className="ai-thinking__icon-stage">
           <span className="ai-thinking__icon-halo" aria-hidden />
-          <img
-            src={iconSrc}
-            alt=""
-            className="ai-thinking__icon"
-            width={112}
-            height={112}
-            decoding="sync"
-            fetchPriority="high"
-            draggable={false}
-          />
-        </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={current.id}
+              src={iconSrc}
+              alt=""
+              className="ai-thinking__icon"
+              width={112}
+              height={112}
+              decoding="sync"
+              fetchPriority="high"
+              draggable={false}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </AnimatePresence>
+        </div>
       </div>
 
       <p className="ai-thinking__eyebrow">{COPY.thinking.eyebrow}</p>
