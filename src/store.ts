@@ -11,6 +11,8 @@ import type {
 export type TabId = 'start' | 'wins'
 export type UnfreezeMode = 'stuck' | 'noise'
 
+export const DAILY_PROGRESS_GOAL = 6
+
 export type ActiveSession = {
   sessionId: number
   mode: UnfreezeMode
@@ -40,6 +42,9 @@ export type ActiveSession = {
   cognitiveBlocks: CognitiveBlock[]
   overloadIntro: string
   aiChoseForYou: boolean
+  motivationalBridge: string
+  actionMetaphor: string
+  resultGlimpse: string
 }
 
 type AppState = {
@@ -55,6 +60,7 @@ type AppState = {
     completionPct: number
     doneToday: number
   }
+  dailyProgress: { done: number; goal: number }
   memory: FocusMemoryItem[]
   tab: TabId
   history: FocusHistoryItem[]
@@ -63,6 +69,7 @@ type AppState = {
   applyInit: (d: InitResponse) => void
   setBootComplete: () => void
   setStats: (s: InitResponse['stats']) => void
+  bumpDailyProgress: () => void
   setAiUsage: (u: { aiUsedToday: number; hintsLimit: number; ownerUnlimited?: boolean }) => void
   setHistory: (items: FocusHistoryItem[]) => void
   setActiveSession: (u: ActiveSession | null) => void
@@ -83,6 +90,7 @@ export const useAppStore = create<AppState>((set) => ({
     completionPct: 0,
     doneToday: 0,
   },
+  dailyProgress: { done: 0, goal: DAILY_PROGRESS_GOAL },
   memory: [],
   tab: 'start',
   history: [],
@@ -94,10 +102,32 @@ export const useAppStore = create<AppState>((set) => ({
       ownerUnlimited: Boolean(d.ownerUnlimited || d.aiUsage?.ownerUnlimited),
       aiUsage: d.aiUsage,
       stats: d.stats,
+      dailyProgress: {
+        done: d.stats.doneToday ?? 0,
+        goal: DAILY_PROGRESS_GOAL,
+      },
       memory: d.memory || [],
     }),
   setBootComplete: () => set({ ready: true }),
-  setStats: (stats) => set({ stats }),
+  setStats: (stats) =>
+    set({
+      stats,
+      dailyProgress: {
+        done: stats.doneToday ?? 0,
+        goal: DAILY_PROGRESS_GOAL,
+      },
+    }),
+  bumpDailyProgress: () =>
+    set((state) => {
+      const done = Math.min(
+        state.dailyProgress.goal,
+        Math.max(state.dailyProgress.done, (state.stats.doneToday ?? 0)) + 1,
+      )
+      return {
+        dailyProgress: { ...state.dailyProgress, done },
+        stats: { ...state.stats, doneToday: done },
+      }
+    }),
   setAiUsage: (aiUsage) => set({ aiUsage }),
   setHistory: (history) => set({ history }),
   setActiveSession: (activeSession) => set({ activeSession }),
@@ -157,6 +187,9 @@ export const useAppStore = create<AppState>((set) => ({
         cognitiveBlocks: normalizeCognitiveBlocks(res),
         overloadIntro: res.overloadIntro || '',
         aiChoseForYou: Boolean(res.aiChoseForYou),
+        motivationalBridge: res.motivationalBridge || '',
+        actionMetaphor: res.actionMetaphor || '',
+        resultGlimpse: res.resultGlimpse || '',
       },
     })
   },

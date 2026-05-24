@@ -18,6 +18,7 @@ function formatWhen(iso: string | null) {
 export function WinsScreen() {
   const history = useAppStore((s) => s.history)
   const stats = useAppStore((s) => s.stats)
+  const dailyProgress = useAppStore((s) => s.dailyProgress)
   const setHistory = useAppStore((s) => s.setHistory)
   const setStats = useAppStore((s) => s.setStats)
   const [loading, setLoading] = useState(false)
@@ -75,6 +76,20 @@ export function WinsScreen() {
         <p className="start-hero__subtitle">{COPY.wins.subtitle}</p>
       </header>
 
+      <div className="today-progress today-progress--wins" aria-label={COPY.result.todayProgressLabel(dailyProgress.done, dailyProgress.goal)}>
+        <p className="today-progress__label">
+          {COPY.result.todayProgressLabel(dailyProgress.done, dailyProgress.goal)}
+        </p>
+        <div className="today-progress__track today-progress__track--green">
+          <div
+            className="today-progress__fill today-progress__fill--green"
+            style={{
+              width: `${Math.min(100, Math.round((dailyProgress.done / Math.max(dailyProgress.goal, 1)) * 100))}%`,
+            }}
+          />
+        </div>
+      </div>
+
       <div className="stat-grid stat-grid--3">
         <div className="stat-card">
           <p className="stat-card__value">{stats.microStepsTotal ?? stats.winsTotal}</p>
@@ -86,12 +101,19 @@ export function WinsScreen() {
         </div>
         <div className="stat-card stat-card--streak">
           <p className="stat-card__value stat-card__value--streak">
-            <span className="stat-card__fire" aria-hidden>
+            <span className="stat-card__fire stat-card__fire--pulse" aria-hidden>
               🔥
             </span>
             {stats.streakDays || 0}
           </p>
-          <p className="stat-card__label">{COPY.wins.streak}</p>
+          {(stats.streakDays || 0) > 0 && (
+            <p className="stat-card__headline stat-card__headline--streak">
+              {COPY.wins.streakHeadline(stats.streakDays || 0)}
+            </p>
+          )}
+          <p className="stat-card__label stat-card__label--streak">
+            {COPY.wins.streakLabel(stats.streakDays || 0)}
+          </p>
         </div>
       </div>
 

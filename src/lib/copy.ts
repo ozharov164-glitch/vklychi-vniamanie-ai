@@ -116,7 +116,8 @@ export const COPY = {
     closeHint: 'Это не оценка. История не засорится, если отменить.',
     notHelp: 'Не подходит — подобрать другую опору',
     notHelpLoading: 'Ищу другую опору…',
-    done: 'Сдвинулось — сохранить',
+    done: 'Сдвинулось — твой ход, штурман!',
+    motivationEyebrow: 'Зачем это сработает',
     alternatesShow: 'Другая опора из разбора',
     alternatesHide: 'Скрыть другие опоры',
     saveAndExit: 'Сохранить разбор и выйти',
@@ -132,7 +133,7 @@ export const COPY = {
     measurableTag: 'Микро-шаг',
     themeAlreadyActive: 'Это уже ваша текущая опора',
     todayProgressLabel: (done: number, total: number) =>
-      `Сегодня выполнено: ${done}/${total} микро-шагов`,
+      `Сегодня: ${done}/${total} микро-шагов`,
   },
 
   helpWorked: [
@@ -155,6 +156,16 @@ export const COPY = {
     microStepsTotal: 'микро-шагов создано',
     completionPct: 'завершено',
     streak: 'дней подряд',
+    streakLabel: (days: number) => {
+      if (days > 1) return 'Ты возвращаешься — это главное'
+      if (days === 1) return 'Ты в ударе! 1 день подряд'
+      return 'дней подряд'
+    },
+    streakHeadline: (days: number) => {
+      if (days < 1) return ''
+      const w = days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'
+      return `Ты в ударе! ${days} ${w} подряд`
+    },
     total: 'всего',
     today: 'сегодня',
     requestsTitle: 'Твои запросы',

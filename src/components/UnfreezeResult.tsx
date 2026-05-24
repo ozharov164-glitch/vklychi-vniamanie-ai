@@ -64,6 +64,8 @@ export function UnfreezeResult() {
   const applyActionResponse = useAppStore((s) => s.applyActionResponse)
   const setActiveSession = useAppStore((s) => s.setActiveSession)
   const setStats = useAppStore((s) => s.setStats)
+  const bumpDailyProgress = useAppStore((s) => s.bumpDailyProgress)
+  const dailyProgress = useAppStore((s) => s.dailyProgress)
   const setAiUsage = useAppStore((s) => s.setAiUsage)
   const setMicroStep = useAppStore((s) => s.setMicroStep)
 
@@ -110,8 +112,8 @@ export function UnfreezeResult() {
     return b.now.length + b.today.length + b.later.length > 0
   }, [active])
 
-  const progressDone = stats.doneToday ?? 0
-  const progressTotal = Math.max(stats.sessionsToday ?? 0, progressDone, 1)
+  const progressDone = dailyProgress.done
+  const progressTotal = dailyProgress.goal
 
   if (!active) return null
 
@@ -173,6 +175,7 @@ export function UnfreezeResult() {
       const res = await apiOutcome(active.sessionId, outcome, helpWorked)
       setStats(res.stats)
       if (outcome === 'done') {
+        bumpDailyProgress()
         fireLightConfetti()
         // Даём первому кадру конфетти отрисоваться до сброса экрана разбора.
         requestAnimationFrame(() => requestAnimationFrame(() => setActiveSession(null)))
@@ -224,9 +227,9 @@ export function UnfreezeResult() {
 
       <div className="today-progress" aria-label={COPY.result.todayProgressLabel(progressDone, progressTotal)}>
         <p className="today-progress__label">{COPY.result.todayProgressLabel(progressDone, progressTotal)}</p>
-        <div className="today-progress__track">
+        <div className="today-progress__track today-progress__track--green">
           <div
-            className="today-progress__fill"
+            className="today-progress__fill today-progress__fill--green"
             style={{ width: `${Math.min(100, Math.round((progressDone / progressTotal) * 100))}%` }}
           />
         </div>
@@ -247,6 +250,27 @@ export function UnfreezeResult() {
         step={displayStep}
         aiChoseForYou={active.aiChoseForYou}
       />
+
+      {(active.motivationalBridge || active.actionMetaphor) && (
+        <div className="motivation-card">
+          <p className="motivation-card__eyebrow">
+            <span className="motivation-card__icon" aria-hidden>
+              💡
+            </span>
+            {COPY.result.motivationEyebrow}
+          </p>
+          {active.motivationalBridge && (
+            <p className="motivation-card__bridge">{active.motivationalBridge}</p>
+          )}
+          {active.actionMetaphor && (
+            <p className="motivation-card__metaphor">{active.actionMetaphor}</p>
+          )}
+        </div>
+      )}
+
+      {active.resultGlimpse && (
+        <p className="result-glimpse-line">{active.resultGlimpse}</p>
+      )}
 
       {showThemeLabel && (
         <p className="unfreeze-card__label unfreeze-card__label--below">{active.taskLabel}</p>

@@ -189,6 +189,9 @@ export type ActionResponse = {
   themeChoices?: ThemeChoice[]
   powerLine?: string
   powerAuthor?: string
+  motivationalBridge?: string
+  actionMetaphor?: string
+  resultGlimpse?: string
   aiUsage?: { aiUsedToday: number; hintsLimit: number; ownerUnlimited?: boolean }
   cached?: boolean
   regenerated?: boolean
