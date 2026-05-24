@@ -49,28 +49,23 @@ export function AiThinkingPanel({
       <div className="ai-thinking__grid" aria-hidden />
 
       <div className="ai-thinking__icon-wrap">
-        <span className="ai-thinking__ring" aria-hidden />
-        <motion.div
+        <motion.img
           key={current.id}
-          className="ai-thinking__icon-disk"
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1, y: [0, -3, 0] }}
+          src={iconSrc}
+          alt=""
+          className="ai-thinking__icon"
+          width={72}
+          height={72}
+          decoding="async"
+          draggable={false}
+          initial={{ opacity: 0, scale: 0.88 }}
+          animate={{ opacity: 1, scale: 1, y: [0, -4, 0] }}
           transition={{
             opacity: { duration: 0.35 },
             scale: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-            y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 0.3 },
+            y: { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: 0.35 },
           }}
-        >
-          <img
-            src={iconSrc}
-            alt=""
-            className="ai-thinking__icon"
-            width={80}
-            height={80}
-            decoding="async"
-            draggable={false}
-          />
-        </motion.div>
+        />
       </div>
 
       <p className="ai-thinking__eyebrow">{COPY.thinking.eyebrow}</p>

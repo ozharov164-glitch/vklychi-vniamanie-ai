@@ -3036,53 +3036,23 @@ body::before {
 .ai-thinking__icon-wrap {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   margin: 0 auto 0.55rem;
 }
 
 .ai-thinking--compact .ai-thinking__icon-wrap {
-  width: 64px;
-  height: 64px;
+  width: 58px;
+  height: 58px;
   margin-bottom: 0.45rem;
-}
-
-.ai-thinking__ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px dashed rgba(139, 92, 246, 0.5);
-  animation: ai-thinking-ring 12s linear infinite;
-  pointer-events: none;
-}
-
-.ai-thinking__icon-disk {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72%;
-  height: 72%;
-  border-radius: 50%;
-  overflow: hidden;
-  transform-origin: center center;
-  isolation: isolate;
 }
 
 .ai-thinking__icon {
   display: block;
   width: 100%;
   height: 100%;
-  max-width: none;
-  opacity: 1;
   object-fit: contain;
-  object-position: center;
-  image-rendering: auto;
-  filter: drop-shadow(0 2px 8px rgba(139, 92, 246, 0.22));
+  filter: drop-shadow(0 8px 22px rgba(139, 92, 246, 0.45));
 }
 
 .ai-thinking__eyebrow {
@@ -3182,11 +3152,3 @@ body::before {
   color: var(--muted);
 }
 
-@keyframes ai-thinking-ring {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}

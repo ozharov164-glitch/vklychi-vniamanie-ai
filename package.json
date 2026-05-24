@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "VITE_BUILD_ID=20260524-thinking-v3 vite build",
-    "process-thinking-icons": "bash scripts/process_all_thinking.sh",
+    "build": "VITE_BUILD_ID=20260524-thinking-original vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
