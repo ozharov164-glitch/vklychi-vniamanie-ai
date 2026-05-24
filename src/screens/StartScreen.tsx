@@ -101,7 +101,8 @@ export function StartScreen() {
 
   async function runAction(inputText?: string, opts?: { clarificationFollowUp?: boolean }) {
     if (!mode) return
-    const payload = (inputText ?? text).trim()
+    const raw = typeof inputText === 'string' ? inputText : text
+    const payload = raw.trim()
     if (payload.length < 2) return
     setLoading(true)
     setError('')
@@ -325,9 +326,10 @@ export function StartScreen() {
                 <button
                   type="button"
                   className="btn-primary btn-primary--glow"
-                  onClick={runAction}
+                  disabled={text.trim().length < 2}
+                  onClick={() => void runAction()}
                 >
-                  {COPY.actions.getStep}
+                  {loading ? COPY.actions.pickingStep : COPY.actions.getStep}
                 </button>
               )}
             </>
