@@ -98,8 +98,9 @@ export const COPY = {
 
   result: {
     anchorEyebrow: 'Опора сейчас',
-    whyToggleOpen: '▼ Зачем именно это',
-    whyToggleClose: '▲ Скрыть',
+    whyEyebrow: 'Разбор опоры',
+    whyToggleOpen: 'Зачем именно это',
+    whyToggleClose: 'Скрыть',
     priorityTitle: 'Что важнее сейчас?',
     priorityHint: 'Без нового запроса к ИИ — нажми фокус, опора обновится выше.',
     priorityApplied: 'Опора обновлена',

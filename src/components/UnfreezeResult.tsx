@@ -291,11 +291,37 @@ export function UnfreezeResult() {
       )}
 
       {display.whyShort && (
-        <div className="unfreeze-card unfreeze-card--why">
-          <button type="button" className="why-toggle" onClick={() => setWhyOpen((o) => !o)}>
-            {whyOpen ? COPY.result.whyToggleClose : COPY.result.whyToggleOpen}
+        <div
+          className={`unfreeze-card unfreeze-card--why${whyOpen ? ' unfreeze-card--why-open' : ''}`}
+        >
+          <button
+            type="button"
+            className="why-toggle"
+            aria-expanded={whyOpen}
+            onClick={() => setWhyOpen((o) => !o)}
+          >
+            <span className="why-toggle__shine" aria-hidden />
+            <span className="why-toggle__inner">
+              <span className="why-toggle__gem" aria-hidden>
+                ✦
+              </span>
+              <span className="why-toggle__copy">
+                <span className="why-toggle__eyebrow">{COPY.result.whyEyebrow}</span>
+                <span className="why-toggle__label">
+                  {whyOpen ? COPY.result.whyToggleClose : COPY.result.whyToggleOpen}
+                </span>
+              </span>
+              <span
+                className={`why-toggle__chevron${whyOpen ? ' why-toggle__chevron--open' : ''}`}
+                aria-hidden
+              />
+            </span>
           </button>
-          {whyOpen && <p className="unfreeze-card__reflection">{display.whyShort}</p>}
+          <div className={`why-panel${whyOpen ? ' why-panel--open' : ''}`}>
+            <div className="why-panel__inner">
+              <p className="why-panel__text">{display.whyShort}</p>
+            </div>
+          </div>
         </div>
       )}
 
