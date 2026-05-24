@@ -3036,14 +3036,14 @@ body::before {
 .ai-thinking__icon-wrap {
   position: relative;
   z-index: 1;
-  width: 72px;
-  height: 72px;
+  width: 88px;
+  height: 88px;
   margin: 0 auto 0.55rem;
 }
 
 .ai-thinking--compact .ai-thinking__icon-wrap {
-  width: 58px;
-  height: 58px;
+  width: 72px;
+  height: 72px;
   margin-bottom: 0.45rem;
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Быстрая обработка круговых иконок: isnet + обрезка + масштаб под кольцо UI."""
+"""Прозрачные иконки: isnet (1× загрузка) + обрезка + PNG optimize. По одной — без падений."""
 from __future__ import annotations
 
 import argparse
@@ -32,8 +32,7 @@ ITEMS: tuple[tuple[str, str], ...] = (
 )
 
 CANVAS = 512
-# Символ ≈70% диаметра холста → внутри пунктирного кольца (CSS disk 72%)
-CONTENT_MAX = int(CANVAS * 0.70)
+CONTENT_MAX = int(CANVAS * 0.82)
 SESSION = "isnet-general-use"
 
 
@@ -42,40 +41,36 @@ def strip_bg(im: Image.Image) -> Image.Image:
     rgb = arr[:, :, :3].astype(np.int16)
     a = arr[:, :, 3].astype(np.int16)
     lum = rgb.max(axis=2)
-    spread = np.abs(rgb[:, :, 0] - rgb[:, :, 1]) + np.abs(rgb[:, :, 1] - rgb[:, :, 2]) + np.abs(
-        rgb[:, :, 0] - rgb[:, :, 2]
+    spread = (
+        np.abs(rgb[:, :, 0] - rgb[:, :, 1])
+        + np.abs(rgb[:, :, 1] - rgb[:, :, 2])
+        + np.abs(rgb[:, :, 0] - rgb[:, :, 2])
     )
-    # Чёрная/серая подложка
-    kill = (lum < 48) & (spread < 40)
-    a[kill] = 0
-    # Мутная полупрозрачность
-    haze = (a > 0) & (a < 120) & (lum < 55) & (spread < 45)
-    a[haze] = 0
-    # Плотнее яркий неон
-    neon = (a > 30) & (lum > 70) & (spread > 42)
-    a[neon] = np.clip(a[neon] + 50, 0, 255)
-    arr[:, :, 3] = a.astype(np.uint8)
+    a[(lum < 40) & (spread < 32)] = 0
+    a[(a > 0) & (a < 100) & (lum < 50) & (spread < 38)] = 0
+    bright = (a > 20) & ((lum > 65) | (spread > 40))
+    a[bright] = np.clip(a[bright].astype(np.int16) + 35, 0, 255).astype(np.uint8)
+    arr[:, :, 3] = a
     return Image.fromarray(arr, "RGBA")
 
 
 def tight_crop(im: Image.Image) -> Image.Image:
     a = np.asarray(im.split()[3])
-    for thr in (110, 80, 50):
+    for thr in (100, 72, 48):
         ys, xs = np.where(a >= thr)
-        if xs.size >= 32:
-            pad = 4
-            x0, y0, x1, y1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
+        if xs.size >= 24:
+            pad = 6
             return im.crop(
                 (
-                    max(0, x0 - pad),
-                    max(0, y0 - pad),
-                    min(im.width, x1 + pad),
-                    min(im.height, y1 + pad),
+                    max(0, int(xs.min()) - pad),
+                    max(0, int(ys.min()) - pad),
+                    min(im.width, int(xs.max()) + 1 + pad),
+                    min(im.height, int(ys.max()) + 1 + pad),
                 )
             )
     box = im.getbbox()
     if not box:
-        raise ValueError("empty icon after cutout")
+        raise ValueError("empty after rembg")
     return im.crop(box)
 
 
@@ -91,40 +86,32 @@ def center_fit(im: Image.Image) -> Image.Image:
 
 
 def process_file(src: Path, dest: Path, session) -> None:
-    raw = src.read_bytes()
-    cut = rembg_remove(raw, session=session, alpha_matting=False)
-    im = Image.open(io.BytesIO(cut)).convert("RGBA")
-    im = strip_bg(im)
-    im = center_fit(im)
+    cut = rembg_remove(src.read_bytes(), session=session, alpha_matting=False)
+    im = center_fit(strip_bg(Image.open(io.BytesIO(cut)).convert("RGBA")))
     dest.parent.mkdir(parents=True, exist_ok=True)
     im.save(dest, "PNG", optimize=True, compress_level=9)
     a = np.asarray(im.split()[3])
-    pct = 100.0 * (a > 50).sum() / a.size
-    print(f"OK {dest.name} {dest.stat().st_size // 1024}KB visible={pct:.1f}%", flush=True)
+    print(
+        f"OK {dest.name} {dest.stat().st_size // 1024}KB vis={(a > 48).sum() * 100 / a.size:.1f}%",
+        flush=True,
+    )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--only",
-        help="только один output, напр. thinking-memory.png",
-    )
-    args = parser.parse_args()
-
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--only", help="напр. thinking-read.png")
+    args = ap.parse_args()
     missing = [s for s, _ in ITEMS if not (SRC_DIR / s).exists()]
     if missing:
-        sys.exit(f"Нет файлов: {', '.join(missing)}")
-
-    print(f"loading {SESSION}…", flush=True)
+        sys.exit(f"Нет: {', '.join(missing)}")
+    print(f"session {SESSION}", flush=True)
     session = new_session(SESSION)
-
-    for src_name, out_name in ITEMS:
-        if args.only and out_name != args.only:
+    for src, out in ITEMS:
+        if args.only and out != args.only:
             continue
-        print(f"→ {out_name}", flush=True)
-        process_file(SRC_DIR / src_name, OUT_DIR / out_name, session)
-
-    print(f"done {OUT_DIR}", flush=True)
+        print(out, flush=True)
+        process_file(SRC_DIR / src, OUT_DIR / out, session)
+    print("done", flush=True)
 
 
 if __name__ == "__main__":
