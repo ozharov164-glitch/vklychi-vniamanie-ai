@@ -20,7 +20,7 @@ except ImportError:
     sys.exit("pip install rembg pillow numpy onnxruntime")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from thinking_alpha_utils import enhance_neon, strip_matte  # noqa: E402
+from thinking_alpha_utils import finalize_icon  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = Path(
@@ -35,11 +35,8 @@ ITEMS: tuple[tuple[str, str], ...] = (
     ("thinking-sort-circle.png", "thinking-sort.webp"),
     ("thinking-anchor-circle.png", "thinking-anchor.webp"),
     ("thinking-polish-circle.png", "thinking-polish.webp"),
-    ("thinking-regenerate-circle.png", "thinking-regenerate.webp"),
+    ("thinking-regenerate-circle.png", "thinking-regenerate.png"),
 )
-
-WEBP_QUALITY = 96
-WEBP_LOSSLESS = False
 
 WORK_MIN = 1536
 CANVAS = 512
@@ -140,15 +137,6 @@ def place_on_canvas(im: Image.Image) -> Image.Image:
 
 def save_optimized(im: Image.Image, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    if dest.suffix.lower() == ".webp":
-        im.save(
-            dest,
-            "WEBP",
-            quality=WEBP_QUALITY,
-            method=6,
-            lossless=WEBP_LOSSLESS,
-        )
-        return
     im.save(dest, "PNG", optimize=True, compress_level=9)
 
 
@@ -159,11 +147,9 @@ def process_one(src: Path, dest: Path, session) -> None:
     cut_bytes = rembg_remove(buf.getvalue(), session=session, alpha_matting=False)
     im = Image.open(io.BytesIO(cut_bytes)).convert("RGBA")
     im = clean_cutout(im)
-    im = strip_matte(im)
-    im = enhance_neon(im)
     im = downscale_chain(im, CANVAS)
     im = place_on_canvas(im)
-    im = strip_matte(im)
+    im = finalize_icon(im)
     save_optimized(im, dest)
     a = np.asarray(im.split()[3])
     vis = 100.0 * (a > 48).sum() / a.size

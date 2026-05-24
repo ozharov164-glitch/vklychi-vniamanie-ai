@@ -3053,20 +3053,21 @@ body::before {
   position: relative;
   width: 100%;
   height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  transform: translateZ(0);
 }
 
 .ai-thinking__icon-halo {
   position: absolute;
-  inset: 8%;
+  inset: 10%;
   border-radius: 50%;
   background: radial-gradient(
-    circle at 50% 45%,
-    rgba(167, 139, 250, 0.38) 0%,
-    rgba(56, 189, 248, 0.14) 42%,
-    transparent 72%
+    circle at 50% 50%,
+    rgba(167, 139, 250, 0.32) 0%,
+    transparent 68%
   );
-  filter: blur(10px);
-  opacity: 0.8;
+  opacity: 0.75;
   pointer-events: none;
   animation: ai-thinking-halo-pulse 3.2s ease-in-out infinite;
 }
@@ -3117,9 +3118,11 @@ body::before {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
+  -webkit-clip-path: circle(50% at 50% 50%);
   image-rendering: -webkit-optimize-contrast;
-  -webkit-font-smoothing: antialiased;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   transform: translateZ(0);
