@@ -1,6 +1,17 @@
 /** Нормализация фраз для скрытия дублей на экране результата. */
 
-const DEDUPE_THRESHOLD = 0.85
+/** CFLC: почти дословный дубль — не режем слова пользователя из-за частичного overlap */
+const DEDUPE_THRESHOLD = 0.95
+
+export function normAnchorKey(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[—–-]/g, '-')
+    .replace(/[^\wа-яё]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120)
+}
 
 function norm(s: string): string {
   return s
@@ -61,9 +72,14 @@ export function pickDisplayEcho(fields: DisplayEchoFields): {
   }
 
   if (whyShort) {
-    if (insight && textsAreDuplicate(whyShort, insight)) whyShort = ''
-    else if (echoTargets.some((t) => t && textsAreDuplicate(whyShort, t))) whyShort = ''
-    else if (fields.firstBlockText && textsAreDuplicate(whyShort, fields.firstBlockText)) {
+    if (insight && textsAreDuplicate(whyShort, insight, DEDUPE_THRESHOLD)) {
+      if (whyShort.split(/\s+/).length <= insight.split(/\s+/).length + 2) whyShort = ''
+    } else if (echoTargets.some((t) => t && textsAreDuplicate(whyShort, t, DEDUPE_THRESHOLD))) {
+      if (whyShort.split(/\s+/).length <= 12) whyShort = ''
+    } else if (
+      fields.firstBlockText &&
+      textsAreDuplicate(whyShort, fields.firstBlockText, DEDUPE_THRESHOLD)
+    ) {
       whyShort = ''
     }
   }

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { apiOutcome, apiRegenerate, type CognitiveBlock, type ThemeChoice } from '../api'
+import { apiOutcome, apiRegenerate, apiSyncLane, type CognitiveBlock, type ThemeChoice } from '../api'
 import { COPY } from '../lib/copy'
-import { pickDisplayEcho } from '../lib/displayDedupe'
+import { normAnchorKey, pickDisplayEcho } from '../lib/displayDedupe'
 import { useAppStore } from '../store'
 import { AiThinkingPanel } from './AiThinkingPanel'
 import { MeasurableMicroStepCard } from './MeasurableMicroStepCard'
@@ -67,7 +67,7 @@ export function UnfreezeResult() {
   const bumpDailyProgress = useAppStore((s) => s.bumpDailyProgress)
   const dailyProgress = useAppStore((s) => s.dailyProgress)
   const setAiUsage = useAppStore((s) => s.setAiUsage)
-  const setMicroStep = useAppStore((s) => s.setMicroStep)
+  const setLaneChoice = useAppStore((s) => s.setLaneChoice)
 
   const [finishing, setFinishing] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
@@ -147,19 +147,31 @@ export function UnfreezeResult() {
   }
 
   function applyAnchor(anchor: string) {
-    if (!anchor || anchor === displayStep) return
-    setMicroStep(anchor)
+    if (!anchor || normAnchorKey(anchor) === normAnchorKey(displayStep)) return
+    const laneId =
+      active?.themeChoices.find((c) => normAnchorKey(c.anchor) === normAnchorKey(anchor))?.id ||
+      active?.activeLaneId ||
+      'f0'
+    setLaneChoice(laneId, anchor)
     window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
     document.getElementById('focus-anchor-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 
-  function pickTheme(choice: ThemeChoice) {
-    if (displayStep === choice.anchor) {
+  async function pickTheme(choice: ThemeChoice) {
+    if (!active || !choice.anchor) return
+    if (normAnchorKey(displayStep) === normAnchorKey(choice.anchor)) {
       showToast(COPY.result.themeAlreadyActive)
       window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
       return
     }
-    applyAnchor(choice.anchor)
+    setLaneChoice(choice.id, choice.anchor)
+    window.Telegram?.WebApp.HapticFeedback?.impactOccurred('light')
+    document.getElementById('focus-anchor-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    try {
+      await apiSyncLane(active.sessionId, choice.id, choice.anchor)
+    } catch {
+      /* локальная смена опоры уже применена */
+    }
   }
 
   function pickAlternate(alt: string) {
@@ -371,7 +383,9 @@ export function UnfreezeResult() {
           <p className="priority-picker__hint">{COPY.result.priorityHint}</p>
           <div className="priority-picker__chips">
             {active.themeChoices.map((c) => {
-              const on = displayStep === c.anchor
+              const on =
+                active.activeLaneId === c.id ||
+                normAnchorKey(displayStep) === normAnchorKey(c.anchor)
               return (
                 <button
                   key={c.id}

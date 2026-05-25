@@ -30,6 +30,7 @@ export type ActiveSession = {
   steps: string[]
   alternates: string[]
   themeChoices: ThemeChoice[]
+  activeLaneId: string
   powerLine: string
   powerAuthor: string
   showBuckets: boolean
@@ -74,6 +75,7 @@ type AppState = {
   setHistory: (items: FocusHistoryItem[]) => void
   setActiveSession: (u: ActiveSession | null) => void
   setMicroStep: (microStep: string) => void
+  setLaneChoice: (laneId: string, microStep: string) => void
   applyActionResponse: (res: ActionResponse, mode: UnfreezeMode) => void
 }
 
@@ -143,12 +145,37 @@ export const useAppStore = create<AppState>((set) => ({
           }
         : state,
     ),
+  setLaneChoice: (laneId, microStep) =>
+    set((state) =>
+      state.activeSession
+        ? {
+            activeSession: {
+              ...state.activeSession,
+              activeLaneId: laneId,
+              microStep,
+              measurableMicroStep: microStep,
+            },
+          }
+        : state,
+    ),
   applyActionResponse: (res, mode) => {
     const effectiveMode: UnfreezeMode =
       res.mode === 'noise' ? 'noise' : res.mode === 'stuck' ? 'stuck' : mode
     const micro = res.measurableMicroStep || res.microStep || res.lightest || ''
-    const choices = (res.themeChoices || []).filter((c) => c.anchor && c.label)
+    const seenAnchor = new Set<string>()
+    const choices = (res.themeChoices || []).filter((c) => {
+      if (!c.anchor || !c.label) return false
+      const k = c.anchor.toLowerCase().replace(/\s+/g, ' ').trim()
+      if (seenAnchor.has(k)) return false
+      seenAnchor.add(k)
+      return true
+    })
     const choiceAnchors = new Set(choices.map((c) => c.anchor))
+    const activeLaneId =
+      res.activeLaneId ||
+      choices.find((c) => c.anchor === micro)?.id ||
+      choices[0]?.id ||
+      ''
     const alternates = [
       ...(res.alternates || []),
       ...(res.now || []),
@@ -175,6 +202,7 @@ export const useAppStore = create<AppState>((set) => ({
         steps: res.steps || [],
         alternates,
         themeChoices: choices,
+        activeLaneId,
         powerLine: res.powerLine || '',
         powerAuthor: res.powerAuthor || '',
         showBuckets: effectiveMode === 'noise',

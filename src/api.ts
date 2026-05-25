@@ -187,6 +187,7 @@ export type ActionResponse = {
   mechanism?: string
   emotionalTone?: string
   themeChoices?: ThemeChoice[]
+  activeLaneId?: string
   powerLine?: string
   powerAuthor?: string
   motivationalBridge?: string
@@ -289,6 +290,13 @@ export async function apiRegenerate(sessionId: number, rejectedStep: string) {
     sessionId,
     rejectedStep,
   })
+}
+
+export async function apiSyncLane(sessionId: number, laneId: string, microStep: string) {
+  return post<{ ok: boolean; sessionId: number; activeLaneId: string; microStep: string }>(
+    '/mini-app/focus/sync-lane',
+    { sessionId, laneId, microStep },
+  )
 }
 
 export async function apiOutcome(
