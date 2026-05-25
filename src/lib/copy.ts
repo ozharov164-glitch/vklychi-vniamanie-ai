@@ -156,15 +156,40 @@ export const COPY = {
     microStepsTotal: 'микрошагов создано',
     completionPct: 'завершено',
     streak: 'дней подряд',
-    streakLabel: (days: number) => {
-      if (days > 1) return 'Ты возвращаешься — это главное'
-      if (days === 1) return 'Первый день подряд — отличный старт'
-      return 'дней подряд'
+    /** Склонение: 1 день, 2 дня, 5 дней */
+    streakDaysWord: (n: number) => {
+      const nAbs = Math.abs(Math.floor(n))
+      const mod100 = nAbs % 100
+      const mod10 = nAbs % 10
+      if (mod100 >= 11 && mod100 <= 14) return 'дней'
+      if (mod10 === 1) return 'день'
+      if (mod10 >= 2 && mod10 <= 4) return 'дня'
+      return 'дней'
     },
-    streakHeadline: (days: number) => {
-      if (days < 1) return ''
-      const w = days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'
-      return `Ты в ударе! ${days} ${w} подряд`
+    /**
+     * Карточка серии: без «1 день подряд» — для одного дня отдельная формулировка.
+     */
+    streakCard: (days: number) => {
+      if (days < 1) {
+        return {
+          showHeadline: false,
+          headline: '',
+          sub: 'Сделай шаг сегодня — начнётся серия',
+        }
+      }
+      if (days === 1) {
+        return {
+          showHeadline: true,
+          headline: 'Серия началась',
+          sub: 'Отличный старт. Завтра — второй день',
+        }
+      }
+      const w = COPY.wins.streakDaysWord(days)
+      return {
+        showHeadline: true,
+        headline: 'Ты в ударе!',
+        sub: `${days} ${w} подряд`,
+      }
     },
     total: 'всего',
     today: 'сегодня',

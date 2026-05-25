@@ -3058,24 +3058,57 @@ body::before {
 }
 
 .stat-card--streak {
+  position: relative;
   grid-column: span 1;
+  overflow: hidden;
+  padding: 0.85rem 0.55rem 0.75rem;
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  background: linear-gradient(
+    165deg,
+    rgba(249, 115, 22, 0.14) 0%,
+    rgba(30, 27, 46, 0.95) 45%,
+    rgba(15, 23, 42, 0.98) 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(251, 191, 36, 0.08) inset,
+    0 8px 24px rgba(249, 115, 22, 0.12);
+}
+
+.stat-card__streak-glow {
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 70%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(251, 191, 36, 0.35), transparent 68%);
+  pointer-events: none;
 }
 
 .stat-card__value--streak {
+  position: relative;
+  z-index: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  background: linear-gradient(135deg, #f97316, #fbbf24, #fde68a);
+  gap: 0.1rem;
+  margin: 0;
+  line-height: 1;
+}
+
+.stat-card__streak-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fb923c 0%, #fbbf24 45%, #fde68a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  font-weight: 800;
 }
 
 .stat-card__fire {
-  font-size: 1.1rem;
-  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.5));
+  font-size: 1.35rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.65));
   -webkit-text-fill-color: initial;
   color: initial;
 }
@@ -3249,15 +3282,37 @@ body::before {
 }
 
 .stat-card__headline--streak {
-  margin: 0.15rem 0 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #fdba74;
+  position: relative;
+  z-index: 1;
+  margin: 0.35rem 0 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: #fed7aa;
   text-align: center;
+  text-wrap: balance;
 }
 
 .stat-card__label--streak {
-  font-size: 0.7rem;
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #94a3b8;
+  text-align: center;
+  text-wrap: balance;
+  max-width: 100%;
+}
+
+.stat-grid--3 .stat-card--streak {
+  padding: 0.8rem 0.45rem 0.7rem;
+}
+
+.stat-grid--3 .stat-card--streak .stat-card__streak-num {
+  font-size: 1.5rem;
 }
 
 .today-progress__hint {

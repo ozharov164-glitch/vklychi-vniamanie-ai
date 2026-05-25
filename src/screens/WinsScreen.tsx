@@ -99,22 +99,25 @@ export function WinsScreen() {
           <p className="stat-card__value stat-card__value--accent">{stats.completionPct ?? 0}%</p>
           <p className="stat-card__label">{COPY.wins.completionPct}</p>
         </div>
-        <div className="stat-card stat-card--streak">
-          <p className="stat-card__value stat-card__value--streak">
-            <span className="stat-card__fire stat-card__fire--pulse" aria-hidden>
-              🔥
-            </span>
-            {stats.streakDays || 0}
-          </p>
-          {(stats.streakDays || 0) > 0 && (
-            <p className="stat-card__headline stat-card__headline--streak">
-              {COPY.wins.streakHeadline(stats.streakDays || 0)}
-            </p>
-          )}
-          <p className="stat-card__label stat-card__label--streak">
-            {COPY.wins.streakLabel(stats.streakDays || 0)}
-          </p>
-        </div>
+        {(() => {
+          const streakDays = stats.streakDays || 0
+          const streak = COPY.wins.streakCard(streakDays)
+          return (
+            <div className="stat-card stat-card--streak" aria-label={streak.sub}>
+              <span className="stat-card__streak-glow" aria-hidden />
+              <p className="stat-card__value stat-card__value--streak">
+                <span className="stat-card__fire stat-card__fire--pulse" aria-hidden>
+                  🔥
+                </span>
+                <span className="stat-card__streak-num">{streakDays}</span>
+              </p>
+              {streak.showHeadline && (
+                <p className="stat-card__headline stat-card__headline--streak">{streak.headline}</p>
+              )}
+              <p className="stat-card__label stat-card__label--streak">{streak.sub}</p>
+            </div>
+          )
+        })()}
       </div>
 
       {loading && <p className="hint-line">{COPY.wins.loading}</p>}
