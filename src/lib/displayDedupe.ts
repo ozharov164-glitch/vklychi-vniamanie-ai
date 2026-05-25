@@ -1,5 +1,7 @@
 /** Нормализация фраз для скрытия дублей на экране результата. */
 
+const DEDUPE_THRESHOLD = 0.85
+
 function norm(s: string): string {
   return s
     .toLowerCase()
@@ -8,12 +10,13 @@ function norm(s: string): string {
     .trim()
 }
 
-export function textsAreDuplicate(a: string, b: string): boolean {
+export function textsAreDuplicate(a: string, b: string, threshold = DEDUPE_THRESHOLD): boolean {
   if (!a.trim() || !b.trim()) return false
   const na = norm(a)
   const nb = norm(b)
+  if (!na || !nb) return false
   if (na === nb) return true
-  if (na.length >= 8 && (na.includes(nb) || nb.includes(na))) return true
+  if (na.length >= 12 && (na.includes(nb) || nb.includes(na))) return true
   const wa = new Set(na.split(/\s+/).filter((w) => w.length >= 3))
   const wb = new Set(nb.split(/\s+/).filter((w) => w.length >= 3))
   if (wa.size < 2 || wb.size < 2) return na === nb
@@ -21,7 +24,7 @@ export function textsAreDuplicate(a: string, b: string): boolean {
   wa.forEach((w) => {
     if (wb.has(w)) overlap += 1
   })
-  return overlap / Math.min(wa.size, wb.size) >= 0.55
+  return overlap / Math.min(wa.size, wb.size) >= threshold
 }
 
 export type DisplayEchoFields = {
