@@ -102,7 +102,7 @@ export const COPY = {
     whyToggleOpen: 'Почему именно это',
     whyToggleClose: 'Скрыть',
     priorityTitle: 'Что важнее сейчас?',
-    priorityHint: 'Нажми другую тему — опора обновится без нового запроса к ИИ.',
+    priorityHint: 'Выбери тему — опора сменится сразу, без нового запроса к ИИ.',
     priorityApplied: 'Опора обновлена',
     bucketsLabel: (n: number) => {
       const w = n === 1 ? 'пункт' : n < 5 ? 'пункта' : 'пунктов'

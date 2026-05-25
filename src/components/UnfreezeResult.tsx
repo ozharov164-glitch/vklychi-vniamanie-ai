@@ -120,7 +120,7 @@ export function UnfreezeResult() {
   const displayStep = active.measurableMicroStep || active.microStep
   const alternatesVisible = active.alternates.filter((a) => a !== displayStep)
   const planItems = active.planLater.length ? active.planLater : active.steps.slice(1)
-  const hasThemePicker = active.themeChoices.length >= 1
+  const hasThemePicker = active.themeChoices.length >= 2
   const busy = finishing || regenerating
   const showBreakdown = active.showBuckets && breakdownCount > 0
 
